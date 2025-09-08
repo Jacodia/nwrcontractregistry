@@ -5,7 +5,6 @@ import smtplib
 import ssl
 import os
 import io
-import pdfplumber
 
 # --- APP CONFIGURATION AND STYLING ---
 st.set_page_config(page_title="NWR Contract Registry", layout="wide")
@@ -119,51 +118,6 @@ def send_email(receiver_email, subject, message_body):
         st.error(f"Failed to send email. Error: {e}")
         return False
 
-# --- PDF UPLOAD AND PARSING LOGIC ---
-def extract_contract_info(pdf_file):
-    """
-    Extracts text from a PDF file and attempts to find key contract information.
-    This uses a basic keyword search and is not a robust NLP solution.
-    """
-    extracted_text = ""
-    try:
-        with pdfplumber.open(pdf_file) as pdf:
-            for page in pdf.pages:
-                extracted_text += page.extract_text() or ""
-    except Exception as e:
-        st.error(f"Error reading PDF: {e}")
-        return None, {}
-    
-    # Simple heuristic to extract data
-    info = {
-        "Parties": "Not found",
-        "Type of contract": "Not found",
-        "Duration": "Not found",
-        "Expiry date": "Not found",
-        "Review by date": "Not found",
-        "Notification Date": "Not found",
-        "Contract value": "Not found",
-    }
-    
-    # Search for keywords
-    lines = extracted_text.split('\n')
-    for i, line in enumerate(lines):
-        line_lower = line.lower()
-        if "parties" in line_lower and i + 1 < len(lines):
-            info["Parties"] = lines[i+1].strip()
-        if "type of contract" in line_lower and i + 1 < len(lines):
-            info["Type of contract"] = lines[i+1].strip()
-        if "duration" in line_lower and i + 1 < len(lines):
-            info["Duration"] = lines[i+1].strip()
-        if "expiry date" in line_lower and i + 1 < len(lines):
-            info["Expiry date"] = lines[i+1].strip()
-        if "review by date" in line_lower and i + 1 < len(lines):
-            info["Review by date"] = lines[i+1].strip()
-        if "contract value" in line_lower and i + 1 < len(lines):
-            info["Contract value"] = lines[i+1].strip()
-
-    return extracted_text, info
-
 # --- STREAMLIT PAGE LAYOUT ---
 st.markdown("<h1 class='main-title'>NWR Contract Registry</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center; color: #bdc3c7; font-size: 1.1rem;'>Dashboard for managing and monitoring company contracts.</p>", unsafe_allow_html=True)
@@ -203,29 +157,17 @@ with tabs[1]:
     st.header("Add a New Contract")
     st.markdown("---")
     
-    uploaded_file = st.file_uploader("Upload a PDF contract", type=["pdf"])
-
-    extracted_info = {}
-    extracted_text = ""
-    if uploaded_file:
-        with st.spinner("Extracting data from PDF..."):
-            extracted_text, extracted_info = extract_contract_info(uploaded_file)
-            if extracted_info:
-                st.success("Data extracted successfully! Review the information below.")
-            
-            with st.expander("Show Extracted PDF Text"):
-                st.text(extracted_text)
+    st.warning("The PDF upload feature is temporarily unavailable due to a missing library. Please add contracts manually using the form below.")
 
     with st.form("new_contract_form"):
         st.subheader("Contract Details")
-        # Pre-fill fields if data was extracted from a PDF
-        new_parties = st.text_input("Parties", value=extracted_info.get("Parties", ""))
-        new_type = st.text_input("Type of Contract", value=extracted_info.get("Type of contract", ""))
-        new_duration = st.text_input("Duration", value=extracted_info.get("Duration", ""))
-        new_expiry = st.text_input("Expiry Date", placeholder="YYYY-MM-DD", value=extracted_info.get("Expiry date", ""))
-        new_review = st.text_input("Review by Date", placeholder="YYYY-MM-DD", value=extracted_info.get("Review by date", ""))
-        new_notification = st.text_input("Notification Date", placeholder="YYYY-MM-DD (e.g., 2025-09-08)", value=extracted_info.get("Notification Date", ""))
-        new_value = st.text_input("Contract Value", value=extracted_info.get("Contract value", ""))
+        new_parties = st.text_input("Parties")
+        new_type = st.text_input("Type of Contract")
+        new_duration = st.text_input("Duration")
+        new_expiry = st.text_input("Expiry Date", placeholder="YYYY-MM-DD")
+        new_review = st.text_input("Review by Date", placeholder="YYYY-MM-DD")
+        new_notification = st.text_input("Notification Date", placeholder="YYYY-MM-DD (e.g., 2025-09-08)")
+        new_value = st.text_input("Contract Value")
         
         submitted = st.form_submit_button("Add Contract")
         if submitted:
