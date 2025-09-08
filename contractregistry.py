@@ -11,12 +11,13 @@ st.set_page_config(page_title="NWR Contract Registry", layout="wide")
 st.markdown("""
 <style>
     .stApp {
-        background-color: #f0f2f6;
+        background-color: #2c3e50; /* Dark blue-grey background */
+        color: #ecf0f1; /* Off-white text */
         font-family: 'Inter', sans-serif;
     }
     h1.main-title {
         text-align: center;
-        color: #2c3e50;
+        color: #ecf0f1; /* Off-white for main title */
         font-size: 3rem;
         font-weight: bold;
         margin-bottom: 0.5rem;
@@ -48,7 +49,17 @@ st.markdown("""
         transform: translateY(-2px);
     }
     .stTextInput>div>div>input, .stTextArea>div>div>textarea, .stSelectbox>div>div>div>input {
+        background-color: #34495e; /* Darker input fields */
+        color: #ecf0f1;
+        border: 1px solid #7f8c8d;
         border-radius: 8px;
+    }
+    .stTextInput>div>div>input::placeholder, .stTextArea>div>div>textarea::placeholder {
+        color: #bdc3c7; /* Lighter placeholder text */
+    }
+    /* Style for the dataframe */
+    .stDataFrame {
+        color: #ecf0f1;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -104,7 +115,7 @@ def send_email(receiver_email, subject, message_body):
 # --- STREAMLIT PAGE LAYOUT ---
 
 st.markdown("<h1 class='main-title'>NWR Contract Registry</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #7f8c8d; font-size: 1.1rem;'>Dashboard for managing and monitoring company contracts.</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #bdc3c7; font-size: 1.1rem;'>Dashboard for managing and monitoring company contracts.</p>", unsafe_allow_html=True)
 
 # Tabs for different functionalities
 tabs = st.tabs(["Dashboard", "Send Notification"])
@@ -127,11 +138,11 @@ with tabs[0]:
         if pd.notna(review_date_str):
             review_date = datetime.strptime(str(review_date_str).split(' ')[0], '%Y-%m-%d').date()
             if review_date <= (today + timedelta(days=90)):
-                return ['background-color: #fce4ec'] * len(row)
+                return ['background-color: #5e4a8c'] * len(row) # Dark purple highlight
         return [''] * len(row)
 
     st.markdown("---")
-    st.info("Contracts with a review date within the next 90 days are highlighted in pink.")
+    st.info("Contracts with a review date within the next 90 days are highlighted.")
     st.dataframe(filtered_df.style.apply(highlight_rows, axis=1), use_container_width=True)
 
 
