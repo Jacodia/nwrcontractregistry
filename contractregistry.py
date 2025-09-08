@@ -188,6 +188,63 @@ with tabs[1]:
             else:
                 st.error("Parties and Type of Contract are required.")
 
+    st.markdown("---")
+    st.header("Edit or Delete an Existing Contract")
+    st.markdown("---")
+    
+    # Create a list of contracts for the selectbox
+    contract_list = df['Parties'] + " - " + df['Type of contract']
+    selected_contract_name = st.selectbox(
+        "Select a contract to edit or delete:",
+        options=['-- Select a contract --'] + list(contract_list)
+    )
+
+    if selected_contract_name != '-- Select a contract --':
+        # Get the row of the selected contract
+        selected_row = df.loc[df[contract_list == selected_contract_name].index[0]]
+        
+        with st.form("edit_contract_form"):
+            st.subheader(f"Editing: {selected_contract_name}")
+            edit_parties = st.text_input("Parties", value=selected_row['Parties'])
+            edit_type = st.text_input("Type of Contract", value=selected_row['Type of contract'])
+            edit_duration = st.text_input("Duration", value=selected_row['Duration'])
+            edit_expiry = st.text_input("Expiry Date", value=selected_row['Expiry date'])
+            edit_review = st.text_input("Review by Date", value=selected_row['Review by date'])
+            
+            # Format notification date for display
+            notification_date_value = selected_row['Notification Date']
+            if pd.notna(notification_date_value):
+                notification_date_value = notification_date_value.strftime('%Y-%m-%d')
+            else:
+                notification_date_value = "Not specified"
+                
+            edit_notification = st.text_input("Notification Date", value=notification_date_value)
+            edit_value = st.text_input("Contract Value", value=selected_row['Contract value'])
+
+            col1, col2 = st.columns(2)
+            with col1:
+                update_submitted = st.form_submit_button("Update Contract")
+            with col2:
+                delete_submitted = st.form_submit_button("Delete Contract")
+
+            if update_submitted:
+                # Update the row in the session state dataframe
+                st.session_state.contracts_df.loc[selected_row.name, 'Parties'] = edit_parties
+                st.session_state.contracts_df.loc[selected_row.name, 'Type of contract'] = edit_type
+                st.session_state.contracts_df.loc[selected_row.name, 'Duration'] = edit_duration
+                st.session_state.contracts_df.loc[selected_row.name, 'Expiry date'] = edit_expiry
+                st.session_state.contracts_df.loc[selected_row.name, 'Review by date'] = edit_review
+                st.session_state.contracts_df.loc[selected_row.name, 'Notification Date'] = edit_notification
+                st.session_state.contracts_df.loc[selected_row.name, 'Contract value'] = edit_value
+                st.success(f"Contract '{selected_contract_name}' updated successfully!")
+                st.rerun()
+
+            if delete_submitted:
+                # Delete the row from the session state dataframe
+                st.session_state.contracts_df = st.session_state.contracts_df.drop(selected_row.name).reset_index(drop=True)
+                st.success(f"Contract '{selected_contract_name}' deleted successfully!")
+                st.rerun()
+
 with tabs[2]:
     st.header("Send a Contract Notification")
     st.markdown("---")
