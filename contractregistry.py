@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 import smtplib
 import ssl
 import os
+import io
+import pdfplumber
 
 # --- APP CONFIGURATION AND STYLING ---
 st.set_page_config(page_title="NWR Contract Registry", layout="wide")
@@ -61,29 +63,34 @@ st.markdown("""
     .stDataFrame {
         color: #ecf0f1;
     }
+    .notification-due-row {
+        background-color: #e74c3c; /* Red color for urgent notification */
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # --- DATA LOADING AND PROCESSING ---
 # Hardcoding the contract data from the provided documents for a self-contained example
 # In a real app, you would load this from a database or a file
-contracts_data = [
-    {"Parties": "NWR // FNB", "Type of contract": "Credit OD Facility", "Duration": "One-year", "Expiry date": "2024-12-31", "Review by date": "2024-11-01", "Contract value": "N$6,500,000.00"},
-    {"Parties": "NWR // Alliance Media", "Type of contract": "Lease agreement", "Duration": "10 years", "Expiry date": "2025-12-31", "Review by date": "2025-10-01", "Contract value": "N$86,940.00"},
-    {"Parties": "NWR // NBC", "Type of contract": "Barter agreement", "Duration": "2 years", "Expiry date": "2024-10-31", "Review by date": "2024-09-01", "Contract value": "N$78,499.00"},
-    {"Parties": "NWR // MTC", "Type of contract": "MTC 3G/4G", "Duration": "24 months", "Expiry date": "Not specified", "Review by date": "Not specified", "Contract value": "Not specified"},
-    {"Parties": "NWR // Tungeni Investments", "Type of contract": "PPP – von Bach", "Duration": "50 years", "Expiry date": "2058-06-30", "Review by date": "2058-01-01", "Contract value": "N$120,000.00"},
-    {"Parties": "NWR // Powercom", "Type of contract": "Lease agreement for an internet tower", "Duration": "36 months", "Expiry date": "2027-10-31", "Review by date": "Not specified", "Contract value": "Not specified"},
-    {"Parties": "NWR // Ricoh", "Type of contract": "Printers rental", "Duration": "36 months", "Expiry date": "2026-03-31", "Review by date": "Not specified", "Contract value": "Not specified"},
-    {"Parties": "NWR // Microsoft", "Type of contract": "Volume licensing", "Duration": "36 months", "Expiry date": "2026-03-31", "Review by date": "Not specified", "Contract value": "Not specified"},
-    {"Parties": "NWR // BCX", "Type of contract": "Offsite backup of data", "Duration": "12 months", "Expiry date": "2026-08-01", "Review by date": "Not specified", "Contract value": "Not specified"},
-    {"Parties": "NWR // CIMSO", "Type of contract": "ERP system (Innkeeper)", "Duration": "12 months", "Expiry date": "2025-07-31", "Review by date": "Not specified", "Contract value": "N$87,548.66"},
-    {"Parties": "NWR // Microsoft", "Type of contract": "Office 365", "Duration": "12 months", "Expiry date": "2024-11-01", "Review by date": "Not specified", "Contract value": "Not specified"},
-]
+if 'contracts_df' not in st.session_state:
+    contracts_data = [
+        {"Parties": "NWR // FNB", "Type of contract": "Credit OD Facility", "Duration": "One-year", "Expiry date": "2024-12-31", "Review by date": "2024-11-01", "Notification Date": "2024-11-01", "Contract value": "N$6,500,000.00"},
+        {"Parties": "NWR // Alliance Media", "Type of contract": "Lease agreement", "Duration": "10 years", "Expiry date": "2025-12-31", "Review by date": "2025-10-01", "Notification Date": "2025-09-08", "Contract value": "N$86,940.00"},
+        {"Parties": "NWR // NBC", "Type of contract": "Barter agreement", "Duration": "2 years", "Expiry date": "2024-10-31", "Review by date": "2024-09-01", "Notification Date": "2024-09-01", "Contract value": "N$78,499.00"},
+        {"Parties": "NWR // MTC", "Type of contract": "MTC 3G/4G", "Duration": "24 months", "Expiry date": "Not specified", "Review by date": "Not specified", "Notification Date": "Not specified", "Contract value": "Not specified"},
+        {"Parties": "NWR // Tungeni Investments", "Type of contract": "PPP – von Bach", "Duration": "50 years", "Expiry date": "2058-06-30", "Review by date": "2058-01-01", "Notification Date": "2058-01-01", "Contract value": "N$120,000.00"},
+        {"Parties": "NWR // Powercom", "Type of contract": "Lease agreement for an internet tower", "Duration": "36 months", "Expiry date": "2027-10-31", "Review by date": "Not specified", "Notification Date": "2027-10-01", "Contract value": "Not specified"},
+        {"Parties": "NWR // Ricoh", "Type of contract": "Printers rental", "Duration": "36 months", "Expiry date": "2026-03-31", "Review by date": "Not specified", "Notification Date": "2026-03-01", "Contract value": "Not specified"},
+        {"Parties": "NWR // Microsoft", "Type of contract": "Volume licensing", "Duration": "36 months", "Expiry date": "2026-03-31", "Review by date": "Not specified", "Notification Date": "2026-03-01", "Contract value": "Not specified"},
+        {"Parties": "NWR // BCX", "Type of contract": "Offsite backup of data", "Duration": "12 months", "Expiry date": "2026-08-01", "Review by date": "Not specified", "Notification Date": "2026-07-15", "Contract value": "Not specified"},
+        {"Parties": "NWR // CIMSO", "Type of contract": "ERP system (Innkeeper)", "Duration": "12 months", "Expiry date": "2025-07-31", "Review by date": "Not specified", "Notification Date": "2025-07-01", "Contract value": "N$87,548.66"},
+        {"Parties": "NWR // Microsoft", "Type of contract": "Office 365", "Duration": "12 months", "Expiry date": "2024-11-01", "Review by date": "Not specified", "Notification Date": "2024-10-15", "Contract value": "Not specified"},
+    ]
+    st.session_state.contracts_df = pd.DataFrame(contracts_data)
 
-df = pd.DataFrame(contracts_data)
+df = st.session_state.contracts_df
 # Convert string dates to datetime objects for comparison
-df['Review by date'] = pd.to_datetime(df['Review by date'], errors='coerce')
+df['Notification Date'] = pd.to_datetime(df['Notification Date'], errors='coerce')
 
 # --- EMAIL SENDING LOGIC ---
 def send_email(receiver_email, subject, message_body):
@@ -92,17 +99,17 @@ def send_email(receiver_email, subject, message_body):
 
     NOTE: For a production app, never hardcode credentials.
     Use environment variables (e.g., os.environ) to store sensitive information.
+    This function is a placeholder and requires a valid email setup to work.
     """
-    sender_email = "your_email@example.com"
-    password = "your_email_password"  # Use os.environ.get("EMAIL_PASSWORD")
-
-    smtp_server = "smtp.gmail.com"  # Example for Gmail
-    port = 587  # For starttls
-
-    message = f"Subject: {subject}\n\n{message_body}"
-    context = ssl.create_default_context()
-
     try:
+        smtp_server = "smtp.gmail.com"
+        port = 587
+        sender_email = "your_email@example.com"
+        password = "your_email_password"
+
+        message = f"Subject: {subject}\n\n{message_body}"
+        context = ssl.create_default_context()
+
         with smtplib.SMTP(smtp_server, port) as server:
             server.starttls(context=context)
             server.login(sender_email, password)
@@ -112,13 +119,57 @@ def send_email(receiver_email, subject, message_body):
         st.error(f"Failed to send email. Error: {e}")
         return False
 
-# --- STREAMLIT PAGE LAYOUT ---
+# --- PDF UPLOAD AND PARSING LOGIC ---
+def extract_contract_info(pdf_file):
+    """
+    Extracts text from a PDF file and attempts to find key contract information.
+    This uses a basic keyword search and is not a robust NLP solution.
+    """
+    extracted_text = ""
+    try:
+        with pdfplumber.open(pdf_file) as pdf:
+            for page in pdf.pages:
+                extracted_text += page.extract_text() or ""
+    except Exception as e:
+        st.error(f"Error reading PDF: {e}")
+        return None, {}
+    
+    # Simple heuristic to extract data
+    info = {
+        "Parties": "Not found",
+        "Type of contract": "Not found",
+        "Duration": "Not found",
+        "Expiry date": "Not found",
+        "Review by date": "Not found",
+        "Notification Date": "Not found",
+        "Contract value": "Not found",
+    }
+    
+    # Search for keywords
+    lines = extracted_text.split('\n')
+    for i, line in enumerate(lines):
+        line_lower = line.lower()
+        if "parties" in line_lower and i + 1 < len(lines):
+            info["Parties"] = lines[i+1].strip()
+        if "type of contract" in line_lower and i + 1 < len(lines):
+            info["Type of contract"] = lines[i+1].strip()
+        if "duration" in line_lower and i + 1 < len(lines):
+            info["Duration"] = lines[i+1].strip()
+        if "expiry date" in line_lower and i + 1 < len(lines):
+            info["Expiry date"] = lines[i+1].strip()
+        if "review by date" in line_lower and i + 1 < len(lines):
+            info["Review by date"] = lines[i+1].strip()
+        if "contract value" in line_lower and i + 1 < len(lines):
+            info["Contract value"] = lines[i+1].strip()
 
+    return extracted_text, info
+
+# --- STREAMLIT PAGE LAYOUT ---
 st.markdown("<h1 class='main-title'>NWR Contract Registry</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center; color: #bdc3c7; font-size: 1.1rem;'>Dashboard for managing and monitoring company contracts.</p>", unsafe_allow_html=True)
 
 # Tabs for different functionalities
-tabs = st.tabs(["Dashboard", "Send Notification"])
+tabs = st.tabs(["Dashboard", "Manage Contracts", "Send Notification"])
 
 with tabs[0]:
     st.header("Contract Overview")
@@ -130,35 +181,106 @@ with tabs[0]:
     else:
         filtered_df = df.copy()
 
-    # Highlight contracts nearing review date
+    # Sort by Notification Date for better visibility
+    filtered_df = filtered_df.sort_values(by='Notification Date', ascending=True)
+
+    # Highlight contracts past their notification date
     today = datetime.now().date()
     # Create a style function
     def highlight_rows(row):
-        review_date_str = row['Review by date']
-        if pd.notna(review_date_str):
-            review_date = datetime.strptime(str(review_date_str).split(' ')[0], '%Y-%m-%d').date()
-            if review_date <= (today + timedelta(days=90)):
-                return ['background-color: #5e4a8c'] * len(row) # Dark purple highlight
+        notification_date_str = row['Notification Date']
+        if pd.notna(notification_date_str):
+            notification_date = notification_date_str.date()
+            if notification_date <= today:
+                return ['background-color: #e74c3c; color: white;'] * len(row)
         return [''] * len(row)
 
     st.markdown("---")
-    st.info("Contracts with a review date within the next 90 days are highlighted.")
+    st.info("Contracts with a notification date on or before today are highlighted in red.")
     st.dataframe(filtered_df.style.apply(highlight_rows, axis=1), use_container_width=True)
 
-
 with tabs[1]:
+    st.header("Add a New Contract")
+    st.markdown("---")
+    
+    uploaded_file = st.file_uploader("Upload a PDF contract", type=["pdf"])
+
+    extracted_info = {}
+    extracted_text = ""
+    if uploaded_file:
+        with st.spinner("Extracting data from PDF..."):
+            extracted_text, extracted_info = extract_contract_info(uploaded_file)
+            if extracted_info:
+                st.success("Data extracted successfully! Review the information below.")
+            
+            with st.expander("Show Extracted PDF Text"):
+                st.text(extracted_text)
+
+    with st.form("new_contract_form"):
+        st.subheader("Contract Details")
+        # Pre-fill fields if data was extracted from a PDF
+        new_parties = st.text_input("Parties", value=extracted_info.get("Parties", ""))
+        new_type = st.text_input("Type of Contract", value=extracted_info.get("Type of contract", ""))
+        new_duration = st.text_input("Duration", value=extracted_info.get("Duration", ""))
+        new_expiry = st.text_input("Expiry Date", placeholder="YYYY-MM-DD", value=extracted_info.get("Expiry date", ""))
+        new_review = st.text_input("Review by Date", placeholder="YYYY-MM-DD", value=extracted_info.get("Review by date", ""))
+        new_notification = st.text_input("Notification Date", placeholder="YYYY-MM-DD (e.g., 2025-09-08)", value=extracted_info.get("Notification Date", ""))
+        new_value = st.text_input("Contract Value", value=extracted_info.get("Contract value", ""))
+        
+        submitted = st.form_submit_button("Add Contract")
+        if submitted:
+            if new_parties and new_type:
+                new_row = {
+                    "Parties": new_parties,
+                    "Type of contract": new_type,
+                    "Duration": new_duration,
+                    "Expiry date": new_expiry,
+                    "Review by date": new_review,
+                    "Notification Date": new_notification,
+                    "Contract value": new_value
+                }
+                new_df = pd.DataFrame([new_row])
+                # Append to the session state dataframe
+                st.session_state.contracts_df = pd.concat([st.session_state.contracts_df, new_df], ignore_index=True)
+                st.success("New contract added successfully!")
+            else:
+                st.error("Parties and Type of Contract are required.")
+
+with tabs[2]:
     st.header("Send a Contract Notification")
     st.markdown("---")
 
-    # Allow user to select a contract from the list
-    contract_options = df['Parties'] + " - " + df['Type of contract']
-    selected_contract = st.selectbox("Select a Contract", options=contract_options)
+    today = datetime.now().date()
+    notification_due = df[pd.to_datetime(df['Notification Date'], errors='coerce').dt.date <= today]
+    
+    st.info("Select a contract below to send an email notification.")
 
-    # Pre-populate the form based on the selected contract
-    if selected_contract:
-        selected_row = df[contract_options == selected_contract].iloc[0]
-        pre_filled_subject = f"Urgent: {selected_row['Type of contract']} contract review"
-        pre_filled_message = f"Hi,\n\nThis is a reminder that the contract with {selected_row['Parties']} for {selected_row['Type of contract']} is due for review on {selected_row['Review by date']}. Please take the necessary action."
+    if not notification_due.empty:
+        st.warning(f"There are {len(notification_due)} contracts past their notification date!")
+        contract_options_due = notification_due['Parties'] + " - " + notification_due['Type of contract'] + " (DUE)"
+        selected_contract_option = st.selectbox(
+            "Select an Overdue Contract to Notify:",
+            options=['-- Select a contract --'] + list(contract_options_due)
+        )
+    else:
+        st.success("No contracts are currently past their notification date. Good job!")
+        all_contract_options = df['Parties'] + " - " + df['Type of contract']
+        selected_contract_option = st.selectbox(
+            "Select a Contract to Notify:",
+            options=['-- Select a contract --'] + list(all_contract_options)
+        )
+
+    if selected_contract_option != '-- Select a contract --':
+        # Get the original index to find the row in the main dataframe
+        if "(DUE)" in selected_contract_option:
+            selected_row_index = notification_due[contract_options_due == selected_contract_option].index[0]
+        else:
+            selected_row_index = df[all_contract_options == selected_contract_option].index[0]
+            
+        selected_row = df.loc[selected_row_index]
+        
+        pre_filled_subject = f"Notification: {selected_row['Type of contract']} contract review"
+        pre_filled_message = f"Hi,\n\nThis is a reminder that the contract with {selected_row['Parties']} for {selected_row['Type of contract']} is due for review on {selected_row['Notification Date'].strftime('%Y-%m-%d')}. Please take the necessary action.\n\nBest regards,\nNWR Registry"
         
         receiver_email = st.text_input("Recipient Email", placeholder="john.doe@example.com")
         subject = st.text_input("Subject", value=pre_filled_subject)
