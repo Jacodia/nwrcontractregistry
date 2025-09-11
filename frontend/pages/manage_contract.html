@@ -22,7 +22,7 @@
             The PDF upload is temporarily unavailable. Please wait until the form is loading below.
         </div>
         <div class="form-group">
-            <label>Contract Details</label>
+            <label>Parties</label>
             <input type="text" placeholder="Contract Details" readonly>
         </div>
         <div class="form-group">
@@ -30,26 +30,35 @@
             <input type="text" placeholder="Type of Contract" readonly>
         </div>
         <div class="form-group">
-            <label>Party Name</label>
+            <label>Description</label>
             <input type="text" placeholder="Party Name" readonly>
         </div>
         <div class="form-group">
-            <label>Review Date</label>
+            <label>Duration</label>
             <input type="text" placeholder="2025-09-10" readonly>
         </div>
         <div class="form-group">
-            <label>Notification Date</label>
+            <label>Expiry Date</label>
             <input type="text" placeholder="2025-09-17" readonly>
         </div>
         <div class="form-group">
-            <label>Contract Value</label>
+            <label>Review By Date</label>
             <input type="text" placeholder="Contract Value" readonly>
         </div>
         <div class="form-group">
-            <label>Status</label>
+            <label>Contract Values</label>
             <input type="text" placeholder="Active" readonly>
         </div>
-        <button>Add</button>
+        <h2></h2>
+         <label for="contract_file">Upload Contract Document</label><br>
+        </h2>
+
+  <input id="contract_file" type="file" name="contract_file" accept=".pdf,.doc,.docx" required>
+
+
+
+
+        <button>Add Contract</button>
         <h1>Edit or Delete an Existing Contract</h1>
         <div class="form-group">
             <input type="text" placeholder="Select a contract to edit..." readonly>
