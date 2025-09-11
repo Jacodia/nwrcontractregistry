@@ -1,0 +1,36 @@
+-- 1️⃣ Create the database
+CREATE DATABASE IF NOT EXISTS `nwr_contract_registry` 
+  DEFAULT CHARACTER SET utf8mb4 
+  COLLATE utf8mb4_unicode_ci;
+
+USE `nwr_contract_registry`;
+
+-- 2️⃣ Create the users table
+CREATE TABLE `users` (
+  `userid` INT(10) NOT NULL AUTO_INCREMENT,
+  `username` VARCHAR(100) NOT NULL,
+  `email` VARCHAR(200) NOT NULL,
+  `password` VARCHAR(255) NOT NULL,
+  `role` ENUM('admin','user','manager') NOT NULL DEFAULT 'user',
+  PRIMARY KEY (`userid`),
+  UNIQUE KEY `username_unique` (`username`),
+  UNIQUE KEY `email_unique` (`email`)
+) ENGINE=InnoDB;
+
+-- 3️⃣ Create the contracts table
+CREATE TABLE `contracts` (
+  `contractid` INT(10) NOT NULL AUTO_INCREMENT,
+  `userid` INT(10) NULL,  -- foreign key to users table
+  `parties` VARCHAR(255) NOT NULL,
+  `typeOfContract` VARCHAR(150) NOT NULL,
+  `description` TEXT,
+  `expiryDate` DATE NOT NULL,
+  `reviewByDate` DATE NOT NULL,
+  `contractValue` DECIMAL(15,2) NOT NULL,
+  PRIMARY KEY (`contractid`),
+  KEY `userid_idx` (`userid`),
+  CONSTRAINT `contracts_user_fk` FOREIGN KEY (`userid`) 
+    REFERENCES `users` (`userid`) 
+    ON DELETE SET NULL 
+    ON UPDATE CASCADE
+) ENGINE=InnoDB;
