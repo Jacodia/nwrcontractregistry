@@ -20,24 +20,55 @@
         <h1>Contract Overview</h1>
         <input type="text" class="search-bar" placeholder="Search by Party or Contract Type...">
         <p class="note">Contracts with a notification date on or before today are highlighted in red.</p>
-        <table>
-            <tr>
-                <th>Parties</th>
-                <th>Type of Contract</th>
-                <th>Duration</th>
-                <th>Expiry Date</th>
-                <th>Reviewed By</th>
-                <th>Contract Value</th>
-            </tr>
-            <tr>
-                <td>NWR // NBC</td>
-                <td>Barter Agreement</td>
-                <td>2 Years</td>
-                <td>2025-09-10</td>
-                <td>2025-08-10</td>
-                <td>$10,000</td>
-            </tr>
+        <table id="contracts-table">
+            <thead>
+                <tr>
+                    <th>Parties</th>
+                    <th>Type of Contract</th>
+                    <th>Duration</th>
+                    <th>Expiry Date</th>
+                    <th>Reviewed By</th>
+                    <th>Contract Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data will be inserted here -->
+            </tbody>
         </table>
+        <input type="file" id="csvFileInput" accept=".csv" />
+
+        <script>
+        // Simple CSV parser
+        function parseCSV(text) {
+            const rows = text.trim().split('\n');
+            return rows.map(row => row.split(','));
+        }
+
+        document.getElementById('csvFileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const csv = event.target.result;
+                const data = parseCSV(csv);
+                const tbody = document.querySelector('#contracts-table tbody');
+                tbody.innerHTML = '';
+                // Skip header row if present
+                const startIdx = (data[0][0].toLowerCase().includes('parties')) ? 1 : 0;
+                for (let i = startIdx; i < data.length; i++) {
+                    const row = data[i];
+                    const tr = document.createElement('tr');
+                    row.forEach(cell => {
+                        const td = document.createElement('td');
+                        td.textContent = cell;
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                }
+            };
+            reader.readAsText(file);
+        });
+        </script>
     </div>
 </body>
 </html>
