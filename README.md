@@ -24,8 +24,9 @@ nwrcontractregistry
 │   │   └── app.js
 │   └── pages
 │       ├── dashboard.html
-│       ├── add_contract.html
+│       ├── manage_contract.html
 │       └── edit_contract.html
+│       └── add_contract.html
 │
 ├── scripts
 │   ├── contractregistry.py
