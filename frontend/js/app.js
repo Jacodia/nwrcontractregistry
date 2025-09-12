@@ -1,8 +1,17 @@
 async function loadContracts() {
+    console.log("Loading");
     try {
-        const response = await fetch('../../backend/index.php?action=getContracts');
+
+        console.log("yeh")
+
+        const response = await fetch('../../backend/index.php?action=list');
+
+        console.log("smth");
         const contracts = await response.json();
 
+        console.log("anothe");
+        console.log("Contracts:", contracts);
+       
         const tbody = document.querySelector('#contracts-table tbody');
         tbody.innerHTML = '';
 
@@ -29,6 +38,8 @@ async function loadContracts() {
 
             tbody.appendChild(tr);
         });
+
+        console.log("skiii-yii");
     } catch (err) {
         console.error('Error loading contracts:', err);
     }

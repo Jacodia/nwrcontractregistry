@@ -1,4 +1,6 @@
 <?php
+
+
 class ContractController {
     private $model;
 
