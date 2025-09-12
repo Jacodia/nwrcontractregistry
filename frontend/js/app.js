@@ -1,29 +1,28 @@
-document.addEventListener("DOMContentLoaded", () => {
-    console.log("Dashboard loaded");
+function loadContracts() {
+  fetch("../../controllers/contractController.php?action=list")
+    .then(res => res.json())
+    .then(data => {
+      const tbody = document.querySelector("#contracts-table tbody");
+      tbody.innerHTML = "";
+      data.forEach(contract => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${contract.contractid}</td>
+          <td>${contract.parties}</td>
+          <td>${contract.typeOfContract}</td>
+          <td>${contract.description}</td>
+          <td>${contract.expiryDate}</td>
+          <td>${contract.reviewByDate}</td>
+          <td>${contract.contractValue}</td>
+          <td>
+            <button onclick="editContract(${contract.contractid})">Edit</button>
+            <button onclick="deleteContract(${contract.contractid})">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    });
+}
 
-    fetch("../../backend/contracts.php")
-        .then(response => response.json())
-        .then(data => {
-            const tableBody = document.querySelector("#contracts-table tbody");
-            tableBody.innerHTML = ""; // clear dummy rows
-
-            data.forEach(contract => {
-                const row = document.createElement("tr");
-
-                row.innerHTML = `
-                    <td>${contract.parties}</td>
-                    <td>${contract.typeOfContract}</td>
-                    <td>${contract.description || "-"}</td>
-                    <td>${contract.expiryDate}</td>
-                    <td>${contract.reviewByDate}</td>
-                    <td>$${Number(contract.contractValue).toFixed(2)}</td>
-                    <td class="${new Date(contract.expiryDate) < new Date() ? "expired" : "active"}">
-                        ${new Date(contract.expiryDate) < new Date() ? "Expired" : "Active"}
-                    </td>
-                `;
-
-                tableBody.appendChild(row);
-            });
-        })
-        .catch(err => console.error("Error loading contracts:", err));
-});
+// Call on page load
+loadContracts();

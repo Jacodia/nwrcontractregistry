@@ -1,6 +1,7 @@
 <?php
 class Contract {
     private $pdo;
+    private $table = 'contracts';
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
@@ -8,22 +9,49 @@ class Contract {
 
     // Get all contracts
     public function getAll() {
-        $stmt = $this->pdo->query("
-            SELECT contractid, parties, typeOfContract, description, expiryDate, reviewByDate, contractValue 
-            FROM contracts 
-            ORDER BY expiryDate ASC
-        ");
+        $sql = "SELECT contractid, parties, typeOfContract, description, expiryDate, reviewByDate, contractValue 
+                FROM {$this->table}";
+        $stmt = $this->pdo->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     // Get one contract by ID (optional for later use)
     public function getById($id) {
-        $stmt = $this->pdo->prepare("
-            SELECT contractid, parties, typeOfContract, description, expiryDate, reviewByDate, contractValue 
-            FROM contracts 
-            WHERE contractid = :id
-        ");
+        $sql = "SELECT * FROM {$this->table} WHERE contractid = :id";
+        $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+
+    // Add a new contract
+    public function create($data) {
+        $sql = "INSERT INTO {$this->table} 
+                (parties, typeOfContract, description, expiryDate, reviewByDate, contractValue) 
+                VALUES (:parties, :typeOfContract, :description, :expiryDate, :reviewByDate, :contractValue)";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute($data);
+    }
+
+    // Update an existing contract
+    public function update($id, $data) {
+        $data['id'] = $id;
+        $sql = "UPDATE {$this->table} SET 
+                parties = :parties, 
+                typeOfContract = :typeOfContract, 
+                description = :description, 
+                expiryDate = :expiryDate, 
+                reviewByDate = :reviewByDate, 
+                contractValue = :contractValue 
+                WHERE contractid = :id";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute($data);
+    }
+    
+    // Delete a contract
+    public function delete($id) {
+        $sql = "DELETE FROM {$this->table} WHERE contractid = :id";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute(['id' => $id]);
+    }
 }
+?>

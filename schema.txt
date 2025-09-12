@@ -1,11 +1,11 @@
--- 1️⃣ Create the database
-CREATE DATABASE IF NOT EXISTS `nwr_contract_registry` 
+-- Create the database
+CREATE DATABASE IF NOT EXISTS `nwr_crdb` 
   DEFAULT CHARACTER SET utf8mb4 
   COLLATE utf8mb4_unicode_ci;
 
-USE `nwr_contract_registry`;
+USE `nwr_crdb`;
 
--- 2️⃣ Create the users table
+-- Create the users table
 CREATE TABLE `users` (
   `userid` INT(10) NOT NULL AUTO_INCREMENT,
   `username` VARCHAR(100) NOT NULL,
@@ -15,22 +15,30 @@ CREATE TABLE `users` (
   PRIMARY KEY (`userid`),
   UNIQUE KEY `username_unique` (`username`),
   UNIQUE KEY `email_unique` (`email`)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 3️⃣ Create the contracts table
+-- Create the contracts table
 CREATE TABLE `contracts` (
   `contractid` INT(10) NOT NULL AUTO_INCREMENT,
-  `userid` INT(10) NULL,  -- foreign key to users table
   `parties` VARCHAR(255) NOT NULL,
   `typeOfContract` VARCHAR(150) NOT NULL,
+  `duration` VARCHAR(100) NOT NULL,   -- e.g., '12 months', '2 years'
   `description` TEXT,
   `expiryDate` DATE NOT NULL,
-  `reviewByDate` DATE NOT NULL,
-  `contractValue` DECIMAL(15,2) NOT NULL,
-  PRIMARY KEY (`contractid`),
-  KEY `userid_idx` (`userid`),
-  CONSTRAINT `contracts_user_fk` FOREIGN KEY (`userid`) 
-    REFERENCES `users` (`userid`) 
-    ON DELETE SET NULL 
-    ON UPDATE CASCADE
-) ENGINE=InnoDB;
+  `reviewByDate` DATE NULL,           -- optional, can be auto-generated 3 months before expiry
+  `contractValue` DECIMAL(15,2) NULL, -- money value, can be NULL if "Not specified"
+  PRIMARY KEY (`contractid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Data for tables
+INSERT INTO `contracts` 
+(`parties`, `typeOfContract`, `duration`, `description`, `expiryDate`, `reviewByDate`, `contractValue`)
+VALUES
+('NWR // NBC', 'Barter agreement', '2 years', NULL, '2024-10-31', '2024-09-01', 78499.00),
+('NWR // Microsoft', 'Office 365', '12 months', NULL, '2024-11-01', NULL, NULL),
+('NWR // FNB', 'Credit OD Facility', 'One-year', NULL, '2024-12-31', '2024-11-01', 6500000.00),
+('NWR // CIMSO', 'ERP system (Innkeeper)', '12 months', NULL, '2025-07-31', NULL, 87548.66),
+('NWR // Alliance Media', 'Lease agreement', '10 years', NULL, '2025-12-31', '2025-10-01', 86940.00),
+('NWR // Ricoh', 'Printers rental', '36 months', NULL, '2026-03-31', NULL, NULL),
+('NWR // Microsoft', 'Volume licensing', '36 months', NULL, '2026-03-31', NULL, NULL),
+('NWR // BCX', 'Offsite backup of data', '12 months', NULL, '2026-08-01', NULL, NULL);

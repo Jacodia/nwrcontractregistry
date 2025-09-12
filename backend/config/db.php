@@ -1,6 +1,6 @@
 <?php
 
-$host = "locslhost";
+$host = "locslhost:8080";
 $user = "root";
 $pass = "";
 $db = "nwr_crdb";
