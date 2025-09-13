@@ -7,15 +7,18 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <header>
-        <h1>Welcome to the Web Project</h1>
-    </header>
-    <form class="login-form" method="post" action="login_process.html">
-    <h1>Login</h1>
-    <p>email: </p><input type="email" name="email" required></br>
-    <p>Password: </p><input type="password" name="password" required><br>
+    <h2>Login</h2>
+
+<form class="login-form" action="login.php" method="POST">
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" required>
+
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required>
+
     <button type="submit">Login</button>
 </form>
+
     <main>
         <p>This is the main content area. There will be login done here</p>
     </main>
