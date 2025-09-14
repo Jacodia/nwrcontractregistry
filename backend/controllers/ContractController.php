@@ -1,63 +1,36 @@
 <?php
-header("Content-Type: application/json");
 
-require_once "../config/db.php"; // include database connection
-require_once "../models/Contract.php"; // include Contract model
 
-// initialize model with PDO
-$model = new Contract($pdo);
+class ContractController {
+    private $model;
 
-// Decide action from query string
-$action = $_GET['action'] ?? 'list';
+    public function __construct($pdo) {
+        require_once __DIR__ . '/../models/Contract.php';
+        $this->model = new Contract($pdo);
+    }
 
-switch ($action) {
-    case 'list':
-        echo json_encode($model->getAll());
-        break;
+    // fecth all
+    public function list() {
+        return $this->model->getAll();
+    }
 
-    case 'view':
-        $id = $_GET['id'] ?? null;
-        if ($id) {
-            echo json_encode($model->getById($id));
-        } else {
-            http_response_code(400);
-            echo json_encode(["error" => "Contract ID required"]);
-        }
-        break;
+    // Filter by contractid
+    public function view($id) {
+        return $this->model->getById($id);
+    }
 
-    case 'create':
-        $data = json_decode(file_get_contents("php://input"), true);
-        if ($model->create($data)) {
-            echo json_encode(["message" => "Contract created"]);
-        } else {
-            http_response_code(500);
-            echo json_encode(["error" => "Failed to create contract"]);
-        }
-        break;
+    // Create contract
+    public function create($data) {
+        return $this->model->create($data);
+    }
 
-    case 'update':
-        $id = $_GET['id'] ?? null;
-        $data = json_decode(file_get_contents("php://input"), true);
-        if ($id && $model->update($id, $data)) {
-            echo json_encode(["message" => "Contract updated"]);
-        } else {
-            http_response_code(500);
-            echo json_encode(["error" => "Failed to update contract"]);
-        }
-        break;
+    // Update contract
+    public function update($id, $data) {
+        return $this->model->update($id, $data);
+    }
 
-    case 'delete':
-        $id = $_GET['id'] ?? null;
-        if ($id && $model->delete($id)) {
-            echo json_encode(["message" => "Contract deleted"]);
-        } else {
-            http_response_code(500);
-            echo json_encode(["error" => "Failed to delete contract"]);
-        }
-        break;
-
-    default:
-        http_response_code(400);
-        echo json_encode(["error" => "Invalid action"]);
+    // Delete contract
+    public function delete($id) {
+        return $this->model->delete($id);
+    }
 }
-?>

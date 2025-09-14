@@ -7,9 +7,16 @@ class Contract {
         $this->pdo = $pdo;
     }
 
+    // Fetch all contracts
+    public function getAllContracts() {
+        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} ORDER BY expiryDate ASC");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     // Get all contracts
     public function getAll() {
-        $sql = "SELECT contractid, parties, typeOfContract, description, expiryDate, reviewByDate, contractValue 
+        $sql = "SELECT contractid, parties, typeOfContract, duration, description, expiryDate, reviewByDate, contractValue 
                 FROM {$this->table}";
         $stmt = $this->pdo->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -26,8 +33,8 @@ class Contract {
     // Add a new contract
     public function create($data) {
         $sql = "INSERT INTO {$this->table} 
-                (parties, typeOfContract, description, expiryDate, reviewByDate, contractValue) 
-                VALUES (:parties, :typeOfContract, :description, :expiryDate, :reviewByDate, :contractValue)";
+                (parties, typeOfContract, duration, description, expiryDate, reviewByDate, contractValue) 
+                VALUES (:parties, :typeOfContract, :duration, :description, :expiryDate, :reviewByDate, :contractValue)";
         $stmt = $this->pdo->prepare($sql);
         return $stmt->execute($data);
     }
@@ -38,6 +45,7 @@ class Contract {
         $sql = "UPDATE {$this->table} SET 
                 parties = :parties, 
                 typeOfContract = :typeOfContract, 
+                duration = :duration,
                 description = :description, 
                 expiryDate = :expiryDate, 
                 reviewByDate = :reviewByDate, 
