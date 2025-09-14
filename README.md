@@ -58,7 +58,7 @@ nwrcontractregistry
 1. Install [XAMPP][def]
 2. Copy `nwrcontractregistry/`folder into your `htdocs/` directory (e.g., `C:/xampp/htdocs/TrackingSys`).
 3. Start Apache (and MySQL (not neccessary for now))
-4. Acces the project in a browser:
+4. Access the project in a browser:
 ``http://localhost/nwrcontractregistry/frontend/index.html
 http://localhost/nwrcontractregistry/backend/index.php``
 
