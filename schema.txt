@@ -42,3 +42,9 @@ VALUES
 ('NWR // Ricoh', 'Printers rental', '36 months', NULL, '2026-03-31', NULL, NULL),
 ('NWR // Microsoft', 'Volume licensing', '36 months', NULL, '2026-03-31', NULL, NULL),
 ('NWR // BCX', 'Offsite backup of data', '12 months', NULL, '2026-08-01', NULL, NULL);
+
+-- Data for tables
+INSERT INTO `users` 
+(`username`, `email`, `password`, `role`)
+VALUES
+('JDoe', 'jdoe@example.com', '123456', 'admin')
