@@ -1,43 +1,47 @@
 <?php
-session_start();
-include 'db.php'; 
-// Example: if you don’t yet track logged-in users with session, 
-// set a default user_id for testing (like 1).
-$user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 1;
-
-// Folder to save uploaded files
 $targetDir = "uploads/";
-if (!file_exists($targetDir)) {
-    mkdir($targetDir, 0777, true);
+$targetFile = $targetDir . basename($_FILES["contractFile"]["name"]);
+$uploadOk = 1;
+$fileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+
+
+
+// Check if file already exists
+if (file_exists($targetFile)) {
+    echo "Sorry, file already exists.";
+    $uploadOk = 0;
 }
 
-$fileName = basename($_FILES["contract_file"]["name"]);
-$targetFilePath = $targetDir . $fileName;
+// Check file size (5MB maximum)
+if ($_FILES["contractFile"]["size"] > 5000000) {
+    echo "Sorry, your file is too large.";
+    $uploadOk = 0;
+}
 
-// It will only allows PDF/DOC/DOCX
-$fileType = strtolower(pathinfo($targetFilePath, PATHINFO_EXTENSION));
-$allowedTypes = ["pdf", "doc", "docx"];
+// Allow certain file formats
+if ($fileType != "pdf" && $fileType != "doc" && $fileType != "docx") {
+    echo "Sorry, only PDF, DOC & DOCX files are allowed.";
+    $uploadOk = 0;
+}
 
-if (in_array($fileType, $allowedTypes)) {
-    if (move_uploaded_file($_FILES["contract_file"]["tmp_name"], $targetFilePath)) {
-        
-        // Insert into DB
-        // We need to change the contract to the correct table that we will create.
-        $sql = "INSERT INTO contracts (user_id, file_name, file_path) 
-                VALUES ('$user_id', '$fileName', '$targetFilePath')";
-        
-        if ($conn->query($sql) === TRUE) {
-            echo "Contract uploaded successfully!";
-        } else {
-            echo " Database error: " . $conn->error;
-        }
+// Check if $uploadOk is set to 0 by an error
+if ($uploadOk == 0) {
+    echo "Sorry, your file was not uploaded.";
+// if everything is ok, try to upload file
+} else {
+    if (move_uploaded_file($_FILES["contractFile"]["tmp_name"], $targetFile)) {
+        echo "The file " . htmlspecialchars(basename($_FILES["contractFile"]["name"])) . " has been uploaded.";
+
+        // Save file path to database
+        require_once 'config/db.php';
+        $stmt = $pdo->prepare("UPDATE contracts SET filepath = :filepath WHERE contractid = :contractid");
+        $stmt->bindParam(':filepath', $targetFile);
+        $stmt->bindParam(':contractid', $_POST['contractid']);
+        $stmt->execute();
 
     } else {
-        echo "File upload failed.";
+        echo "Sorry, there was an error uploading your file.";
     }
-} else {
-    echo "Invalid file type. Only PDF, DOC, DOCX allowed.";
 }
 
-$conn->close();
 ?>

@@ -27,6 +27,7 @@ CREATE TABLE `contracts` (
   `expiryDate` DATE NOT NULL,
   `reviewByDate` DATE NULL,           -- optional, can be auto-generated 3 months before expiry
   `contractValue` DECIMAL(15,2) NULL, -- money value, can be NULL if "Not specified"
+  `filepath` VARCHAR(255) NOT NULL,
   PRIMARY KEY (`contractid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

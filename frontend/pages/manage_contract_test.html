@@ -159,7 +159,7 @@
         <!-- Create Contract Tab -->
         <div id="create-tab" class="tab-content active">
             <h2>Add a New Contract</h2>
-            <form id="create-form">
+            <form id="create-form" enctype="multipart/form-data">
                 <div class="form-row">
                     <div class="form-group">
                         <label for="parties">Parties *</label>
@@ -195,10 +195,10 @@
                     <label for="description">Description</label>
                     <textarea id="description" name="description" rows="3" placeholder="Enter contract description"></textarea>
                 </div>
-                <!-- <div class="form-group">
+                <div class="form-group">
                     <label for="contractFile">Upload Contract Document *</label>
                     <input type="file" id="contractFile" name="contractFile" accept=".pdf,.doc,.docx" required>
-                </div> -->
+                </div> 
                 </div>
                 
                 <div class="form-row">
@@ -231,7 +231,7 @@
                 </div>
                 <div class="form-group" style="flex: 2;">
                     <label>Edit Contract Details</label>
-                    <form id="edit-form" style="display: none;">
+                    <form id="edit-form" enctype="multipart/form-data" style="display: none;">
                         <input type="hidden" id="edit-contractid" name="contractid">
                         
                         <div class="form-row">
