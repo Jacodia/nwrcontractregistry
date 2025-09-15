@@ -1,21 +1,48 @@
 <?php
-// database connection
-include 'db.php'; 
+// Start session (optional if you want to track logged-in users)
+session_start();
 
-//  data from form
-$user = $_POST['email'];
-$pass = $_POST['password'];
+// Include the DB connection
+require_once 'config/db.php'; // path to your db.php file
 
-// Query to check user
-$sql = "SELECT * FROM users WHERE username='$user' AND password='$pass'";
-$result = $conn->query($sql);
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    if (!empty($_POST['email']) && !empty($_POST['password'])) {
 
-if ($result->num_rows > 0) {
-    header("Location: manage_contract.html");
-    exit();
-} else {
-    echo "Invalid username or password!";
+        $email = $_POST['email'];
+        $password = $_POST['password']; // Do NOT hash here
+
+        try {
+            // Check if user exists
+            $stmt = $pdo->prepare("SELECT * FROM login WHERE email = :email");
+            $stmt->bindParam(':email', $email);
+            $stmt->execute();
+
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($user) {
+                // Verify password against stored hash
+                if (password_verify($password, $user['password'])) {
+
+                    // Optional: store user in session
+                    $_SESSION['user_email'] = $user['email'];
+
+                    // Redirect to dashboard.html in frontend/pages/
+                    header("Location: ../frontend/pages/dashboard.html");
+                    exit(); // stop execution
+
+                } else {
+                    echo "Incorrect password.";
+                }
+            } else {
+                echo "User not found.";
+            }
+
+        } catch (PDOException $e) {
+            echo "Error: " . $e->getMessage();
+        }
+
+    } else {
+        echo "Email and password are required.";
+    }
 }
-
-$conn->close();
 ?>
