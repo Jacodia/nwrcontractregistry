@@ -1,48 +1,47 @@
 <?php
-// Start session (optional if you want to track logged-in users)
 session_start();
+require_once 'config/db.php';
 
-// Include the DB connection
-require_once 'config/db.php'; // path to your db.php file
+// Redirect logged-in users
+if (isset($_SESSION['user_email'])) {
+    header("Location: ../frontend/pages/dashboard.html");
+    exit();
+}
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (!empty($_POST['email']) && !empty($_POST['password'])) {
-
         $email = $_POST['email'];
-        $password = $_POST['password']; // Do NOT hash here
+        $password = $_POST['password'];
 
         try {
-            // Check if user exists
-            $stmt = $pdo->prepare("SELECT * FROM login WHERE email = :email");
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE email = :email");
             $stmt->bindParam(':email', $email);
             $stmt->execute();
-
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($user) {
-                // Verify password against stored hash
-                if (password_verify($password, $user['password'])) {
+            if ($user && password_verify($password, $user['password'])) {
+                session_regenerate_id(true); // prevent session fixation
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['user_email'] = $user['email'];
 
-                    // Optional: store user in session
-                    $_SESSION['user_email'] = $user['email'];
-
-                    // Redirect to dashboard.html in frontend/pages/
-                    header("Location: ../frontend/pages/dashboard.html");
-                    exit(); // stop execution
-
-                } else {
-                    echo "Incorrect password.";
-                }
+                header("Location: ../frontend/pages/dashboard.html");
+                exit();
             } else {
-                echo "User not found.";
+                $_SESSION['error'] = "Invalid email or password.";
+                header("Location: ../frontend/index.php");
+                exit();
             }
 
         } catch (PDOException $e) {
-            echo "Error: " . $e->getMessage();
+            error_log($e->getMessage());
+            $_SESSION['error'] = "Something went wrong. Please try again later.";
+            header("Location: ../frontend/index.php");
+            exit();
         }
-
     } else {
-        echo "Email and password are required.";
+        $_SESSION['error'] = "Please enter email and password.";
+        header("Location: ../frontend/index.php");
+        exit();
     }
 }
 ?>

@@ -78,35 +78,42 @@ class Contract
         }
     }
 
-    // Only include filepath if present
-   if (isset($data['filepath'])) {
-    // Sanitize the filename (replace forbidden characters)
-    $filename = basename($data['filepath']); // strips any directory info
-    $safeName = preg_replace('/[\/\\\\:*?"<>|]/', '_', $filename);
+    // Handle new uploaded file if present
+    if (!empty($data['filepath'])) {
+        $uploadDir = __DIR__ . '/../uploads/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
 
-    // Adds a timestamp to avoid collisions
-    $newFileName = time() . "_" . $safeName;
+        // Sanitize parties name
+        $partiesName = isset($data['parties']) ? preg_replace('/[\/\\\\:*?"<>|]/', '_', $data['parties']) : 'contract';
 
-    // Define the upload directory
-    $uploadDir = "uploads/";
-    $fullPath = $uploadDir . $newFileName;
+        // Get file extension
+        $extension = pathinfo($data['filepath'], PATHINFO_EXTENSION);
 
-    // Update the fields and values arrays
-    $fields[] = "filepath = ?";
-    $values[] = $fullPath;
-}
+        // New filename
+        $newFileName = $partiesName . "_" . time() . "." . $extension;
 
+        $fullPath = $uploadDir . $newFileName;
+
+        // Move the uploaded file
+        if (move_uploaded_file($_FILES['contractFile']['tmp_name'], $fullPath)) {
+            $fields[] = "filepath = ?";
+            $values[] = 'uploads/' . $newFileName; // relative path
+        }
+    }
 
     if (empty($fields)) {
         return false; // nothing to update
     }
 
     $values[] = $id; // WHERE id = ?
-
+    
     $sql = "UPDATE contracts SET " . implode(", ", $fields) . " WHERE contractid = ?";
     $stmt = $this->pdo->prepare($sql);
     return $stmt->execute($values);
 }
+
 
     // Delete a contract
     public function delete($id)
