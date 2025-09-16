@@ -76,4 +76,47 @@ async function loadContracts() {
 }
 
 // Call on page load
-document.addEventListener('DOMContentLoaded', loadContracts);
+document.addEventListener('DOMContentLoaded', () => {
+
+    // Load contracts
+    loadContracts();
+
+    // Download dashboard list as CSV
+    const downloadBtn = document.getElementById('download-csv');
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', function() {
+            // Add table headers
+            const rows = [[
+                'Contract ID', 
+                'Parties', 
+                'Type of Contract', 
+                'Duration', 
+                'Description', 
+                'Expiry Date', 
+                'Review By', 
+                'Contract Value'
+            ]];
+
+            // Loop through table body rows
+            document.querySelectorAll('#contracts-table tbody tr').forEach(tr => {
+                const cols = tr.querySelectorAll('td');
+                const row = Array.from(cols).map(td => td ? td.innerText.trim() : '');
+                rows.push(row);
+            });
+
+            // Convert to CSV string
+            const csvContent = "data:text/csv;charset=utf-8," 
+                + rows.map(r => r.map(v => `"${v.replace(/"/g, '""')}"`).join(",")).join("\n");
+
+            // Create and click download link
+            const downloadLink = document.createElement('a');
+            downloadLink.href = encodeURI(csvContent);
+            downloadLink.download = 'contracts.csv';
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        });
+    }
+
+});
+
