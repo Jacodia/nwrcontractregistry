@@ -106,27 +106,22 @@ function setupFormHandlers() {
 // Handle create contract
 async function handleCreateContract(e) {
     e.preventDefault();
-    
+
     const formData = new FormData(e.target);
-    const data = Object.fromEntries(formData.entries());
-    
-    console.log('Creating contract:', data);
-    
+    console.log('Creating contract (FormData):', ...formData);
     try {
         const response = await fetch(`${API_BASE}?action=create`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
+            body: formData // Do not set headers, browser will set multipart/form-data
         });
-        
-        if (!response.ok) throw new Error('Failed to create contract');
-        
+
+        if (!response.ok) throw new Error('Failed to create contract: ' + response.statusText + error);
+
         const result = await response.json();
         console.log('Create result:', result);
-        
+
         showMessage('Contract created successfully!', 'success');
+
         e.target.reset();
         loadContracts(); // Refresh the lists
         
@@ -189,37 +184,35 @@ async function handleUpdateContract(e) {
         showMessage('No contract selected for editing', 'error');
         return;
     }
-    
+
     const formData = new FormData(e.target);
-    const data = Object.fromEntries(formData.entries());
-    const contractId = data.contractid;
-    delete data.contractid; // Remove ID from data object
+    const contractId = formData.get('contractid');
+    formData.delete('contractid'); // backend probably uses the ?id= param
     
-    console.log('Updating contract:', contractId, data);
-    
+    console.log('Updating contract (FormData):', ...formData);
+
     try {
         const response = await fetch(`${API_BASE}?action=update&id=${contractId}`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
+            body: formData // same style as create
         });
-        
+
         if (!response.ok) throw new Error('Failed to update contract');
-        
+
         const result = await response.json();
         console.log('Update result:', result);
-        
+
         showMessage('Contract updated successfully!', 'success');
         clearEditForm();
-        loadContracts(); // Refresh the lists
-        
+        loadContracts();
+
     } catch (error) {
         console.error('Error updating contract:', error);
         showMessage('Error updating contract: ' + error.message, 'error');
     }
 }
+
+
 
 // Select contract for deletion
 function selectContractForDelete(contractId) {

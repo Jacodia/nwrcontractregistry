@@ -5,6 +5,132 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Contract</title>
     <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+        }
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 16px;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        .tab.active {
+            border-bottom-color: #007bff;
+            color: #007bff;
+            font-weight: bold;
+        }
+        .tab:hover {
+            background-color: #f8f9fa;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        .contract-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .contract-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .contract-item:hover {
+            background-color: #f8f9fa;
+        }
+        .contract-item.selected {
+            background-color: #e3f2fd;
+            border-left: 4px solid #007bff;
+        }
+        .contract-item h4 {
+            margin: 0 0 5px 0;
+            color: #333;
+        }
+        .contract-item p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .message {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: none;
+        }
+        .message.success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .message.error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+    </style>
 </head>
 <body>
     <div class="navbar">
@@ -16,54 +142,191 @@
         </div>
         <div>Dashboard for managing and monitoring company contracts</div>
     </div>
+    
     <div class="container">
-        <h1>Add a New Contract</h1>
-        <div class="warning">
-            The PDF upload is temporarily unavailable. Please wait until the form is loading below.
+        <h1>Manage Contracts</h1>
+        
+        <!-- Message display area -->
+        <div id="message" class="message"></div>
+        
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" data-tab="create">Create New Contract</button>
+            <button class="tab" data-tab="edit">Edit Contract</button>
+            <button class="tab" data-tab="delete">Delete Contract</button>
         </div>
-        <div class="form-group">
-            <label>Parties</label>
-            <input type="text" placeholder="Contract Details" readonly>
+        
+        <!-- Create Contract Tab -->
+        <div id="create-tab" class="tab-content active">
+            <h2>Add a New Contract</h2>
+            <form id="create-form" enctype="multipart/form-data">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="parties">Parties *</label>
+                        <input type="text" id="parties" name="parties" placeholder="Enter contract parties" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="typeOfContract">Type of Contract *</label>
+                        <select id="typeOfContract" name="typeOfContract" required>
+                            <option value="">Select contract type</option>
+                            <option value="Service Agreement">Service Agreement</option>
+                            <option value="Supply Agreement">Supply Agreement</option>
+                            <option value="Employment Contract">Employment Contract</option>
+                            <option value="Lease Agreement">Lease Agreement</option>
+                            <option value="Partnership Agreement">Partnership Agreement</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="duration">Duration *</label>
+                        <input type="text" id="duration" name="duration" placeholder="e.g., 12 months, 2 years" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contractValue">Contract Value *</label>
+                        <input type="number" id="contractValue" name="contractValue" step="0.01" placeholder="0.00" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="3" placeholder="Enter contract description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="contractFile">Upload Contract Document *</label>
+                    <input type="file" id="contractFile" name="contractFile" accept=".pdf,.doc,.docx" required>
+                </div> 
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="expiryDate">Expiry Date *</label>
+                        <input type="date" id="expiryDate" name="expiryDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reviewByDate">Review By Date</label>
+                        <input type="date" id="reviewByDate" name="reviewByDate">
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">Create Contract</button>
+                    <button type="reset" class="btn btn-warning">Reset Form</button>
+                </div>
+            </form>
         </div>
-        <div class="form-group">
-            <label>Type of Contract</label>
-            <input type="text" placeholder="Type of Contract" readonly>
+        
+        <!-- Edit Contract Tab -->
+        <div id="edit-tab" class="tab-content">
+            <h2>Edit Contract</h2>
+            <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                    <label>Select Contract to Edit</label>
+                    <div id="contract-list" class="contract-list">
+                        <div class="loading">Loading contracts...</div>
+                    </div>
+                </div>
+                <div class="form-group" style="flex: 2;">
+                    <label>Edit Contract Details</label>
+                    <form id="edit-form" enctype="multipart/form-data" style="display: none;">
+                        <input type="hidden" id="edit-contractid" name="contractid">
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit-parties">Parties *</label>
+                                <input type="text" id="edit-parties" name="parties" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-typeOfContract">Type of Contract *</label>
+                                <select id="edit-typeOfContract" name="typeOfContract" required>
+                                    <option value="">Select contract type</option>
+                                    <option value="Service Agreement">Service Agreement</option>
+                                    <option value="Supply Agreement">Supply Agreement</option>
+                                    <option value="Employment Contract">Employment Contract</option>
+                                    <option value="Lease Agreement">Lease Agreement</option>
+                                    <option value="Partnership Agreement">Partnership Agreement</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit-duration">Duration *</label>
+                                <input type="text" id="edit-duration" name="duration" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-contractValue">Contract Value *</label>
+                                <input type="number" id="edit-contractValue" name="contractValue" step="0.01" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit-description">Description</label>
+                            <textarea id="edit-description" name="description" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="contractFile">Upload Contract Document</label>
+                            <input type="file" id="contractFile" name="contractFile" accept=".pdf,.doc,.docx">
+                        </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit-expiryDate">Expiry Date *</label>
+                                <input type="date" id="edit-expiryDate" name="expiryDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-reviewByDate">Review By Date</label>
+                                <input type="date" id="edit-reviewByDate" name="reviewByDate">
+                            </div>
+                        </div>
+                        
+                        <div class="button-group">
+                            <button type="submit" class="btn btn-success">Update Contract</button>
+                            <button type="button" class="btn btn-warning" onclick="clearEditForm()">Cancel</button>
+                        </div>
+                    </form>
+                    
+                    <div id="edit-placeholder" class="loading" style="text-align: center; padding: 50px; color: #999;">
+                        Select a contract from the list to edit
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="form-group">
-            <label>Description</label>
-            <input type="text" placeholder="Party Name" readonly>
-        </div>
-        <div class="form-group">
-            <label>Duration</label>
-            <input type="text" placeholder="2025-09-10" readonly>
-        </div>
-        <div class="form-group">
-            <label>Expiry Date</label>
-            <input type="text" placeholder="2025-09-17" readonly>
-        </div>
-        <div class="form-group">
-            <label>Review By Date</label>
-            <input type="text" placeholder="Contract Value" readonly>
-        </div>
-        <div class="form-group">
-            <label>Contract Values</label>
-            <input type="text" placeholder="Active" readonly>
-        </div>
-        <h2>Upload Contract</h2>
-<form action="upload_contract.php" method="POST" enctype="multipart/form-data">
-    <label for="contract_file">Upload Contract Document</label><br>
-    <input id="contract_file" type="file" name="contract_file" accept=".pdf,.doc,.docx" required><br><br>
-    <button type="submit">Upload</button>
-</form>
-
-
-
-
-        <button>Add Contract</button>
-        <h1>Edit or Delete an Existing Contract</h1>
-        <div class="form-group">
-            <input type="text" placeholder="Select a contract to edit..." readonly>
+        
+        <!-- Delete Contract Tab -->
+        <div id="delete-tab" class="tab-content">
+            <h2>Delete Contract</h2>
+            <div class="warning" style="background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                <strong>Warning:</strong> Contract deletion is permanent and cannot be undone!
+            </div>
+            
+            <div class="form-group">
+                <label>Select Contract to Delete</label>
+                <div id="delete-contract-list" class="contract-list">
+                    <div class="loading">Loading contracts...</div>
+                </div>
+            </div>
+            
+            <div id="delete-confirmation" style="display: none; margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 5px;">
+                <h3>Confirm Deletion</h3>
+                <p><strong>Contract ID:</strong> <span id="delete-contract-id"></span></p>
+                <p><strong>Parties:</strong> <span id="delete-contract-parties"></span></p>
+                <p><strong>Type:</strong> <span id="delete-contract-type"></span></p>
+                <p><strong>Value:</strong> <span id="delete-contract-value"></span></p>
+                
+                <div class="button-group">
+                    <button type="button" class="btn btn-danger" onclick="confirmDelete()">Delete Contract</button>
+                    <button type="button" class="btn btn-warning" onclick="cancelDelete()">Cancel</button>
+                </div>
+            </div>
         </div>
     </div>
+    
+    <script src="../js/manage_contract.js"></script>
 </body>
-</html>

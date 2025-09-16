@@ -36,32 +36,42 @@ class Contract
     }
 
     // Add a new contract
-    public function create($data)
-    {
-        $sql = "INSERT INTO {$this->table} 
+    public function create($data) {
+    $sql = "INSERT INTO {$this->table} 
             (parties, typeOfContract, duration, description, expiryDate, reviewByDate, contractValue, filepath) 
             VALUES (:parties, :typeOfContract, :duration, :description, :expiryDate, :reviewByDate, :contractValue, :filepath)";
-        $stmt = $this->pdo->prepare($sql);
-        return $stmt->execute($data);
+    $stmt = $this->pdo->prepare($sql);
+    return $stmt->execute($data);
+}
+
+
+    public function update($id, $data) {
+    $fields = [];
+    $values = [];
+
+    foreach (['parties','typeOfContract','duration','contractValue','description','expiryDate','reviewByDate'] as $col) {
+        if (isset($data[$col])) {
+            $fields[] = "$col = ?";
+            $values[] = $data[$col];
+        }
     }
 
-    // Update an existing contract
-    public function update($id, $data)
-    {
-        $data['id'] = $id;
-        $sql = "UPDATE {$this->table} SET 
-                parties = :parties, 
-                typeOfContract = :typeOfContract, 
-                duration = :duration,
-                description = :description, 
-                expiryDate = :expiryDate, 
-                reviewByDate = :reviewByDate, 
-                contractValue = :contractValue,
-                filepath = :filepath
-                WHERE contractid = :id";
-        $stmt = $this->pdo->prepare($sql);
-        return $stmt->execute($data);
+    // Only include filepath if present
+    if (isset($data['filepath'])) {
+        $fields[] = "filepath = ?";
+        $values[] = $data['filepath'];
     }
+
+    if (empty($fields)) {
+        return false; // nothing to update
+    }
+
+    $values[] = $id; // WHERE id = ?
+
+    $sql = "UPDATE contracts SET " . implode(", ", $fields) . " WHERE contractid = ?";
+    $stmt = $this->pdo->prepare($sql);
+    return $stmt->execute($values);
+}
 
     // Delete a contract
     public function delete($id)
