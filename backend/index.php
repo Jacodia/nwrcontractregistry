@@ -26,32 +26,36 @@ try {
             break;
 
         case 'create':
-            if (!empty($_FILES['contractFile']['name'])) {
-                $uploadDir = __DIR__ . '/uploads/';
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0777, true);
-                }
-                $filename = time() . "_" . basename($_FILES['contractFile']['name']);
-                $targetPath = $uploadDir . $filename;
+    $data = $_POST;
 
-                if (move_uploaded_file($_FILES['contractFile']['tmp_name'], $targetPath)) {
-                    $data = $_POST;
-                    $data['filepath'] = 'uploads/' . $filename; // relative path
-                    if ($controller->create($data)) {
-                        echo json_encode(["message" => "Contract created"]);
-                    } else {
-                        http_response_code(500);
-                        echo json_encode(["error" => "Failed to create contract"]);
-                    }
-                } else {
-                    http_response_code(500);
-                    echo json_encode(["error" => "File upload failed"]);
-                }
-            } else {
-                http_response_code(400);
-                echo json_encode(["error" => "File is required"]);
-            }
-            break;
+    // Handle file only if it was uploaded
+    if (!empty($_FILES['contractFile']['name'])) {
+        $uploadDir = __DIR__ . '/uploads/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        $filename = time() . "_" . basename($_FILES['contractFile']['name']);
+        $targetPath = $uploadDir . $filename;
+
+        if (move_uploaded_file($_FILES['contractFile']['tmp_name'], $targetPath)) {
+            $data['filepath'] = 'uploads/' . $filename; // relative path
+        } else {
+            http_response_code(500);
+            echo json_encode(["error" => "File upload failed"]);
+            exit;
+        }
+    }
+
+    // Save contract (with or without file)
+    if ($controller->create($data)) {
+        echo json_encode(["message" => "Contract created"]);
+    } else {
+        http_response_code(500);
+        echo json_encode(["error" => "Failed to create contract"]);
+    }
+    break;
+
 
         case 'update':
             $id = $_GET['id'] ?? null;

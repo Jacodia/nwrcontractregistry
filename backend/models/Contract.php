@@ -37,12 +37,34 @@ class Contract
 
     // Add a new contract
     public function create($data) {
-    $sql = "INSERT INTO {$this->table} 
-            (parties, typeOfContract, duration, description, expiryDate, reviewByDate, contractValue, filepath) 
-            VALUES (:parties, :typeOfContract, :duration, :description, :expiryDate, :reviewByDate, :contractValue, :filepath)";
+    $fields = [];
+    $placeholders = [];
+    $values = [];
+
+    // Standard columns
+    foreach (['parties','typeOfContract','duration','contractValue','description','expiryDate','reviewByDate'] as $col) {
+        if (isset($data[$col])) {
+            $fields[] = $col;
+            $placeholders[] = '?';
+            $values[] = $data[$col];
+        }
+    }
+
+    // Optional file path
+    if (!empty($data['filepath'])) {
+        $fields[] = "filepath";
+        $placeholders[] = "?";
+        $values[] = $data['filepath'];
+    }
+
+    // Build SQL dynamically
+    $sql = "INSERT INTO contracts (" . implode(", ", $fields) . ")
+            VALUES (" . implode(", ", $placeholders) . ")";
+
     $stmt = $this->pdo->prepare($sql);
-    return $stmt->execute($data);
+    return $stmt->execute($values);
 }
+
 
 
     public function update($id, $data) {
