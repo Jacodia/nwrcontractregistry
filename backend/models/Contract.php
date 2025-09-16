@@ -79,10 +79,23 @@ class Contract
     }
 
     // Only include filepath if present
-    if (isset($data['filepath'])) {
-        $fields[] = "filepath = ?";
-        $values[] = $data['filepath'];
-    }
+   if (isset($data['filepath'])) {
+    // Sanitize the filename (replace forbidden characters)
+    $filename = basename($data['filepath']); // strips any directory info
+    $safeName = preg_replace('/[\/\\\\:*?"<>|]/', '_', $filename);
+
+    // Adds a timestamp to avoid collisions
+    $newFileName = time() . "_" . $safeName;
+
+    // Define the upload directory
+    $uploadDir = "uploads/";
+    $fullPath = $uploadDir . $newFileName;
+
+    // Update the fields and values arrays
+    $fields[] = "filepath = ?";
+    $values[] = $fullPath;
+}
+
 
     if (empty($fields)) {
         return false; // nothing to update
