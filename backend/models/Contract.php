@@ -20,7 +20,7 @@ class Contract
     // Get all contracts
     public function getAll()
     {
-        $sql = "SELECT contractid, parties, typeOfContract, duration, description, expiryDate, reviewByDate, contractValue 
+        $sql = "SELECT contractid, parties, typeOfContract, duration, description, filepath, expiryDate, reviewByDate, contractValue 
                 FROM {$this->table}";
         $stmt = $this->pdo->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

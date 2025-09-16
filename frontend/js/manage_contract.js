@@ -161,6 +161,22 @@ function populateEditForm(contract) {
     document.getElementById('edit-description').value = contract.description || '';
     document.getElementById('edit-expiryDate').value = contract.expiryDate || '';
     document.getElementById('edit-reviewByDate').value = contract.reviewByDate || '';
+
+    // Handle file view/download links
+    const viewContainer = document.getElementById('edit-view-file');
+    const viewLink = document.getElementById('view-contract-file');
+    const downloadLink = document.getElementById('download-contract-file');
+
+    if (contract.filepath) {
+        const fileUrl = `/nwrcontractregistry/backend/${contract.filepath}`;
+        viewLink.href = fileUrl;
+        downloadLink.href = fileUrl;
+        viewContainer.style.display = 'block';
+    } else {
+        viewContainer.style.display = 'none';
+        viewLink.href = '#';
+        downloadLink.href = '#';
+    }
 }
 
 // Clear edit form

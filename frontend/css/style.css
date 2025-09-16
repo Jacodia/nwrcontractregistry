@@ -160,3 +160,14 @@ button {
 button:hover {
     background-color: #2980b9;
 }
+
+.btn.btn-secondary {
+    padding: 6px 12px;
+    border-radius: 4px;
+    background: #6c757d;
+    color: #fff;
+    text-decoration: none;
+}
+.btn.btn-secondary:hover {
+    background: #5a6268;
+}
