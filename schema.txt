@@ -12,6 +12,7 @@ CREATE TABLE `users` (
   `email` VARCHAR(200) NOT NULL,
   `password` VARCHAR(255) NOT NULL,
   `role` ENUM('admin','user','manager') NOT NULL DEFAULT 'user',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`userid`),
   UNIQUE KEY `username_unique` (`username`),
   UNIQUE KEY `email_unique` (`email`)
@@ -31,7 +32,7 @@ CREATE TABLE `contracts` (
   PRIMARY KEY (`contractid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Data for tables
+-- Sample contract data
 INSERT INTO `contracts` 
 (`parties`, `typeOfContract`, `duration`, `description`, `expiryDate`, `reviewByDate`, `contractValue`)
 VALUES
@@ -44,8 +45,12 @@ VALUES
 ('NWR // Microsoft', 'Volume licensing', '36 months', NULL, '2026-03-31', NULL, NULL),
 ('NWR // BCX', 'Offsite backup of data', '12 months', NULL, '2026-08-01', NULL, NULL);
 
--- Data for users
-INSERT INTO `users`
-(`userid`, `username`, `email`, `password`, `role`)
-VALUES
-('1', 'Jdoe55', 'jdoe@example.com', '1234567890', 'admin')
+-- Test user accounts with properly hashed passwords
+-- Admin user: admin@nwr.com / password: admin123
+INSERT INTO `users` (`username`, `email`, `password`, `role`) 
+VALUES ('admin', 'admin@nwr.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin')
+ON DUPLICATE KEY UPDATE role = 'admin';
+
+-- Manager user: manager@nwr.com / password: manager123  
+INSERT INTO `users` (`username`, `email`, `password`, `role`) 
+VALUES ('manager', 'manager@nwr.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'manager')

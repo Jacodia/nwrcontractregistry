@@ -1,9 +1,13 @@
 <?php
+// backend/login.php - Updated to work with new auth system
 session_start();
 require_once 'config/db.php';
+require_once 'config/auth.php';
 
-// Redirect logged-in users
-if (isset($_SESSION['user_email'])) {
+Auth::init($pdo);
+
+// Redirect already logged-in users
+if (Auth::isLoggedIn()) {
     header("Location: ../frontend/pages/dashboard.html");
     exit();
 }
@@ -13,28 +17,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $email = $_POST['email'];
         $password = $_POST['password'];
 
-        try {
-            $stmt = $pdo->prepare("SELECT * FROM users WHERE email = :email");
-            $stmt->bindParam(':email', $email);
-            $stmt->execute();
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($user && password_verify($password, $user['password'])) {
-                session_regenerate_id(true); // prevent session fixation
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['user_email'] = $user['email'];
-
-                header("Location: ../frontend/pages/dashboard.html");
-                exit();
-            } else {
-                $_SESSION['error'] = "Invalid email or password.";
-                header("Location: ../frontend/index.php");
-                exit();
-            }
-
-        } catch (PDOException $e) {
-            error_log($e->getMessage());
-            $_SESSION['error'] = "Something went wrong. Please try again later.";
+        $result = Auth::login($email, $password);
+        
+        if ($result['success']) {
+            header("Location: ../frontend/pages/dashboard.html");
+            exit();
+        } else {
+            $_SESSION['error'] = $result['error'];
             header("Location: ../frontend/index.php");
             exit();
         }
@@ -44,4 +33,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         exit();
     }
 }
+
+// If not POST request, redirect to login page
+header("Location: ../frontend/index.php");
+exit();
 ?>
