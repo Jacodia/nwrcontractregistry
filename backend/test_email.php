@@ -1,6 +1,6 @@
 <?php
 require 'config/db.php';           // Your PDO connection
-require 'models/contract.php';    // The Contract class
+require 'models/contract.php';     // The Contract class
 
 $contract = new Contract($pdo);
 
@@ -8,6 +8,7 @@ $contract = new Contract($pdo);
 $allContracts = $contract->getAllContracts();
 
 foreach ($allContracts as $c) {
+
     // Use manager_email from the database
     $recipientEmail = $c['manager_email'];
     $contractType   = $c['typeOfContract'];
@@ -19,6 +20,7 @@ foreach ($allContracts as $c) {
     if ($sent) {
         echo "Email sent for contract ID {$c['contractid']} ({$contractType}) to {$recipientEmail}<br>";
     } else {
+
         echo "Failed to send email for contract ID {$c['contractid']} ({$contractType}) to {$recipientEmail}<br>";
     }
 }
