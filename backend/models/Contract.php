@@ -184,7 +184,7 @@ class Contract
             // ===== Sender info =====
             $senderEmail    = 'uraniathomas23@gmail.com'; // Gmail sender
             $senderName     = 'Contract Registry';
-            $senderPassword = 'YOUR_APP_PASSWORD_HERE';   // Gmail App Password
+            $senderPassword = 'lkmkivxthjizqojc';   // Gmail App Password
 
             $mail->isSMTP();
             $mail->Host       = 'smtp.gmail.com';
@@ -199,7 +199,7 @@ class Contract
 
             $mail->isHTML(false);
             $mail->Subject = 'Contract Expiry Notification';
-            $mail->Body    = "Hello,\n\nA contract of type '{$contractType}' is expiring on {$expiryDate}.\nPlease take necessary action.\n\nThank you.";
+            $mail->Body    = "Hello,\n\nThe contract of '{$contractType}' is set to expire on {$expiryDate}.\nPlease take necessary action before it expires.\n\nThank you. \n\nContract Registry System";
 
             $mail->send();
             return true;
