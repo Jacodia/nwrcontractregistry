@@ -36,9 +36,9 @@ CREATE TABLE `contracts` (
 
 
 
--- Sample contract data
+-- Insert sample contracts with correct manager_id 
 INSERT INTO `contracts` 
-(`parties`, `typeOfContract`, `duration`, `description`, `expiryDate`, `reviewByDate`, `contractValue`)
+(`parties`, `typeOfContract`, `duration`, `description`, `expiryDate`, `reviewByDate`, `contractValue`, `manager_id`)
 VALUES
 ('NWR // NBC', 'Barter agreement', '2 years', NULL, '2024-10-31', '2024-09-01', 78499.00, 2),
 ('NWR // Microsoft', 'Office 365', '12 months', NULL, '2024-11-01', NULL, NULL, 2),
@@ -48,6 +48,7 @@ VALUES
 ('NWR // Ricoh', 'Printers rental', '36 months', NULL, '2026-03-31', NULL, NULL, 2),
 ('NWR // Microsoft', 'Volume licensing', '36 months', NULL, '2026-03-31', NULL, NULL, 2),
 ('NWR // BCX', 'Offsite backup of data', '12 months', NULL, '2026-08-01', NULL, NULL, 2);
+
 
 Cardinality Summary
 

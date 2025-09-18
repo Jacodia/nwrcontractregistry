@@ -6,172 +6,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Management</title>
     <link rel="stylesheet" href="../css/style.css">
-    <style>
-        
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .user-badge {
-            background: #007bff;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            text-transform: uppercase;
-        }
-
-        .user-badge.admin { background: #dc3545; }
-        .user-badge.manager { background: #28a745; }
-        .user-badge.user { background: #6c757d; }
-
-        .logout-btn {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-
-        .logout-btn:hover { background: #c82333; }
-
-        .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
-
-        .filters {
-            margin-bottom: 1rem;
-        }
-
-        .search-bar {
-            padding: 8px;
-            width: 100%;
-            max-width: 300px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 0.9rem;
-        }
-
-        .users-table-container {
-            overflow-x: auto;
-        }
-
-        .users-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .users-table th,
-        .users-table td {
-            padding: 1rem;
-            text-align: left;
-            border-bottom: 1px solid #eee;
-        }
-
-        .users-table th {
-            background: #f8f9fa;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .users-table tr:hover {
-            background: #f8f9fa;
-        }
-
-        .role-select {
-            padding: 6px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 0.9rem;
-        }
-
-        .btn {
-            padding: 6px 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            text-decoration: none;
-            display: inline-block;
-            transition: background-color 0.3s;
-        }
-
-        .btn-primary { background: #007bff; color: white; }
-        .btn-primary:hover { background: #0056b3; }
-
-        .btn-danger { background: #dc3545; color: white; }
-        .btn-danger:hover { background: #c82333; }
-
-        .btn-small { padding: 4px 8px; font-size: 0.8rem; }
-
-        .message {
-            padding: 1rem;
-            border-radius: 4px;
-            margin-bottom: 1rem;
-        }
-
-        .message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .access-denied {
-            text-align: center;
-            padding: 3rem;
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
-            border-radius: 8px;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 2rem;
-            color: #666;
-        }
-    </style>
+    <link rel="stylesheet" href="../css/users.css">
 </head>
 
 <body>
-    <div class="navbar">
-        <ul class="nav-links" id="nav-links">
-            <li><a href="dashboard.html">Dashboard</a></li>
-            <li id="manage-contract-nav" style="display: none;">
-                <a href="manage_contract.html">Manage Contract</a>
-            </li>
-            <li id="users-nav" style="display: none;">
-                <a href="users.php" class="active">Users</a>
-            </li>
+    <div class="navbar" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: nowrap; padding: 0 1rem; min-height: 70px; background: #0758aa;">
+        <ul class="nav-links" id="nav-links" style="display: flex; align-items: center; gap: 1.5rem; margin: 0; padding: 0; list-style: none;">
+            <li><a href="dashboard.html" style="color: #fff; text-decoration: none; font-weight: 500;">Dashboard</a></li>
+            <li><a href="manage_contract.html" style="color: #fff; text-decoration: none; font-weight: 500;">Manage Contract</a></li>
+            <li id="users-nav" style="display: none;"><a href="users.php" style="color: #fff; text-decoration: none; font-weight: 500;">Users</a></li>
         </ul>
-
-        <div class="user-info" id="user-info">
+        <div class="user-info" id="user-info" style="display: flex; align-items: center; gap: 1rem; margin-left: 1.5rem;">
             <span id="username-display">Loading...</span>
-            <span id="role-badge" class="user-badge">admin</span>
+            <span id="role-badge" class="user-badge">user</span>
             <button class="logout-btn" onclick="logout()">Logout</button>
         </div>
-
-        <div class="nwr_logo">
+        <div class="nwr_logo" style="margin-left: 1.5rem;">
             <img src="../images/nwr_logo.png" alt="NWR Logo" style="height:60px;">
         </div>
     </div>
+    
+    <style>@media (max-width: 900px) {.navbar {flex-direction: row;flex-wrap: nowrap;padding: 0 0.5rem;}.nav-links {gap: 0.7rem !important;}.user-info {gap: 0.5rem !important;}.nwr_logo img {height: 40px !important;}}@media (max-width: 600px) {.navbar {flex-direction: row;flex-wrap: nowrap;padding: 0 0.2rem;}.nav-links {gap: 0.3rem !important;}.user-info {gap: 0.3rem !important;font-size: 0.85rem;}.nwr_logo img {height: 30px !important;}}.navbar .nav-links li a:hover {text-decoration: underline;}</style>
 
     <div class="container">
         <h1>User Management</h1>

@@ -29,7 +29,27 @@ class Contract
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+<<<<<<< HEAD
     public function create($data)
+=======
+    public function getAll()
+    {
+        $sql = "SELECT contractid, parties, typeOfContract, duration, description, filepath, expiryDate, reviewByDate, contractValue, manager_id 
+                FROM {$this->table}";
+        $stmt = $this->pdo->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getById($id)
+    {
+        $sql = "SELECT * FROM {$this->table} WHERE contractid = :id";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['id' => $id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function create($data, $userid)
+>>>>>>> f290ba3682fa72e5d1e3914d00dcc499e6148e09
     {
         $fields = [];
         $placeholders = [];
@@ -49,18 +69,32 @@ class Contract
             $values[] = $data['filepath'];
         }
 
+        // Add manager_id
+        $fields[] = "manager_id";
+        $placeholders[] = "?";
+        $values[] = $userid;
+
         $sql = "INSERT INTO contracts (" . implode(", ", $fields) . ")
                 VALUES (" . implode(", ", $placeholders) . ")";
         $stmt = $this->pdo->prepare($sql);
         if ($stmt->execute($values)) {
             return $this->pdo->lastInsertId();
         }
+        error_log("Creating contract for user $userid with data: " . json_encode($data));
+
         return false;
     }
 
+<<<<<<< HEAD
     // --------------------
     // Email Notification Methods
     // --------------------
+=======
+    public function update($id, $data, $userid)
+    {
+        $fields = [];
+        $values = [];
+>>>>>>> f290ba3682fa72e5d1e3914d00dcc499e6148e09
 
     // Send notifications for all managers (for cron job)
     public function sendExpiryNotifications()
