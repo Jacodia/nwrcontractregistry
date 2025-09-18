@@ -49,3 +49,10 @@ VALUES
 ('NWR // Microsoft', 'Volume licensing', '36 months', NULL, '2026-03-31', NULL, NULL, 2),
 ('NWR // BCX', 'Offsite backup of data', '12 months', NULL, '2026-08-01', NULL, NULL, 2);
 
+Cardinality Summary
+
+One-to-Many: One manager can create multiple contracts, but each contract is created by exactly one manager.
+
+Many-to-Many (Access): All users can view all contracts, but no direct relationship in the database schema is needed for this access as it will be handled by the application logic.
+
+Manager Notification: The manager linked to each contract via manager_id should be notified about the contract's expiry.
