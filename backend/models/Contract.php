@@ -47,13 +47,13 @@ class Contract
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function create($data)
+     public function create($data, $userid)
     {
         $fields = [];
         $placeholders = [];
         $values = [];
 
-        foreach (['parties','typeOfContract','duration','contractValue','description','expiryDate','reviewByDate','manager_id'] as $col) {
+        foreach (['parties','typeOfContract','duration','contractValue','description','expiryDate','reviewByDate'] as $col) {
             if (isset($data[$col])) {
                 $fields[] = $col;
                 $placeholders[] = '?';
@@ -67,16 +67,24 @@ class Contract
             $values[] = $data['filepath'];
         }
 
-        $sql = "INSERT INTO {$this->table} (" . implode(", ", $fields) . ")
+        // Add manager_id
+        $fields[] = "manager_id";
+        $placeholders[] = "?";
+        $values[] = $userid;
+
+        $sql = "INSERT INTO contracts (" . implode(", ", $fields) . ")
                 VALUES (" . implode(", ", $placeholders) . ")";
+
         $stmt = $this->pdo->prepare($sql);
         if ($stmt->execute($values)) {
             return $this->pdo->lastInsertId();
         }
+        error_log("Creating contract for user $userid with data: " . json_encode($data));
+
         return false;
     }
 
-    public function update($id, $data)
+    public function update($id, $data, $userid)
     {
         $fields = [];
         $values = [];
@@ -88,17 +96,36 @@ class Contract
             }
         }
 
+        // File upload handling
+        if (isset($_FILES['contractFile']) && $_FILES['contractFile']['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = __DIR__ . '/../uploads/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+
+            $partiesName = isset($data['parties']) ? preg_replace('/[\/\\\\:*?"<>|]/', '_', $data['parties']) : 'contract';
+            $extension = pathinfo($_FILES['contractFile']['name'], PATHINFO_EXTENSION);
+            $newFileName = $partiesName . "_" . time() . "." . $extension;
+            $fullPath = $uploadDir . $newFileName;
+
+            if (move_uploaded_file($_FILES['contractFile']['tmp_name'], $fullPath)) {
+                $fields[] = "filepath = ?";
+                $values[] = 'uploads/' . $newFileName;
+            }
+        }
+
         if (empty($fields)) return false;
 
         $values[] = $id;
-        $sql = "UPDATE {$this->table} SET " . implode(", ", $fields) . " WHERE contractid = ?";
+        $sql = "UPDATE contracts SET " . implode(", ", $fields) . " WHERE contractid = ?";
         $stmt = $this->pdo->prepare($sql);
         return $stmt->execute($values);
     }
 
     public function delete($id)
     {
-        $stmt = $this->pdo->prepare("DELETE FROM {$this->table} WHERE contractid = :id");
+        $sql = "DELETE FROM {$this->table} WHERE contractid = :id";
+        $stmt = $this->pdo->prepare($sql);
         return $stmt->execute(['id' => $id]);
     }
 
