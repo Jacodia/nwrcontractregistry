@@ -557,6 +557,7 @@ button:hover, .btn:hover {
     width: 100%;
     border-collapse: collapse;
     background: white;
+    color: black;
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -568,12 +569,22 @@ button:hover, .btn:hover {
     padding: 1rem;
     text-align: left;
     border-bottom: 1px solid #eee;
+    color: #333;
 }
 
 .users-table th {
     background: #f8f9fa;
     font-weight: 600;
     color: #333;
+}
+
+.users-tbody td {
+    vertical-align: middle;
+    color: black;
+}
+.users-tbody tr:nth-child(even) {
+    background: #f9f9f9;
+    color: black;
 }
 
 .users-table tr:hover {

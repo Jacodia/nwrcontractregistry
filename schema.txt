@@ -11,7 +11,7 @@ CREATE TABLE `users` (
   `username` VARCHAR(100) NOT NULL,
   `email` VARCHAR(200) NOT NULL,
   `password` VARCHAR(255) NOT NULL,
-  `role` ENUM('admin','user','manager') NOT NULL DEFAULT 'user',
+  `role` ENUM('admin', 'viewer', 'manager') NOT NULL DEFAULT 'viewer',
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`userid`),
   UNIQUE KEY `username_unique` (`username`),
@@ -23,25 +23,29 @@ CREATE TABLE `contracts` (
   `contractid` INT(10) NOT NULL AUTO_INCREMENT,
   `parties` VARCHAR(255) NOT NULL,
   `typeOfContract` VARCHAR(150) NOT NULL,
-  `duration` VARCHAR(100) NOT NULL,   -- e.g., '12 months', '2 years'
+  `duration` VARCHAR(100) NOT NULL,
   `description` TEXT,
   `expiryDate` DATE NOT NULL,
-  `reviewByDate` DATE NULL,           -- optional, can be auto-generated 3 months before expiry
-  `contractValue` DECIMAL(15,2) NULL, -- money value, can be NULL if "Not specified"
+  `reviewByDate` DATE NULL,
+  `contractValue` DECIMAL(15,2) NULL,
   `filepath` VARCHAR(255) NULL,
-  PRIMARY KEY (`contractid`)
+  `manager_id` INT(10) NOT NULL, -- Foreign key referencing the manager
+  PRIMARY KEY (`contractid`),
+  FOREIGN KEY (`manager_id`) REFERENCES `users`(`userid`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
 
 -- Sample contract data
 INSERT INTO `contracts` 
 (`parties`, `typeOfContract`, `duration`, `description`, `expiryDate`, `reviewByDate`, `contractValue`)
 VALUES
-('NWR // NBC', 'Barter agreement', '2 years', NULL, '2024-10-31', '2024-09-01', 78499.00),
-('NWR // Microsoft', 'Office 365', '12 months', NULL, '2024-11-01', NULL, NULL),
-('NWR // FNB', 'Credit OD Facility', 'One-year', NULL, '2024-12-31', '2024-11-01', 6500000.00),
-('NWR // CIMSO', 'ERP system (Innkeeper)', '12 months', NULL, '2025-07-31', NULL, 87548.66),
-('NWR // Alliance Media', 'Lease agreement', '10 years', NULL, '2025-12-31', '2025-10-01', 86940.00),
-('NWR // Ricoh', 'Printers rental', '36 months', NULL, '2026-03-31', NULL, NULL),
-('NWR // Microsoft', 'Volume licensing', '36 months', NULL, '2026-03-31', NULL, NULL),
-('NWR // BCX', 'Offsite backup of data', '12 months', NULL, '2026-08-01', NULL, NULL);
+('NWR // NBC', 'Barter agreement', '2 years', NULL, '2024-10-31', '2024-09-01', 78499.00, 2),
+('NWR // Microsoft', 'Office 365', '12 months', NULL, '2024-11-01', NULL, NULL, 2),
+('NWR // FNB', 'Credit OD Facility', 'One-year', NULL, '2024-12-31', '2024-11-01', 6500000.00, 2),
+('NWR // CIMSO', 'ERP system (Innkeeper)', '12 months', NULL, '2025-07-31', NULL, 87548.66, 2),
+('NWR // Alliance Media', 'Lease agreement', '10 years', NULL, '2025-12-31', '2025-10-01', 86940.00, 2),
+('NWR // Ricoh', 'Printers rental', '36 months', NULL, '2026-03-31', NULL, NULL, 2),
+('NWR // Microsoft', 'Volume licensing', '36 months', NULL, '2026-03-31', NULL, NULL, 2),
+('NWR // BCX', 'Offsite backup of data', '12 months', NULL, '2026-08-01', NULL, NULL, 2);
 

@@ -8,11 +8,16 @@ This project is a web application that consists of a backend built with PHP and 
 nwrcontractregistry
 ├── backend
 │   ├── config
-│   │   └── db.php                # Database connection
+│   │   ├── db.php                # Database connection
+│   │   └── auth.php
 │   ├── controllers
-│   │   └── ContractController.php
+│   │   ├── ContractController.php
+|   |   ├── UserController.php
+│       ├── edit_contract.html
+│       └── add_contract.html
 │   ├── models
-│   │   └── Contract.php
+│   │   ├── Contract.php
+│   │   ├── User.php
 │   ├── uploads/                  # Stores uploaded contracts (PDFs, etc.)
 │   └── index.php                 # Backend entry point
 │

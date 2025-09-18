@@ -153,9 +153,9 @@
 <body>
     <div class="navbar">
         <ul class="nav-links" id="nav-links">
-            <li><a href="dashboard.php">Dashboard</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
             <li id="manage-contract-nav" style="display: none;">
-                <a href="manage_contract.php">Manage Contract</a>
+                <a href="manage_contract.html">Manage Contract</a>
             </li>
             <li id="users-nav" style="display: none;">
                 <a href="users.php" class="active">Users</a>
@@ -198,7 +198,6 @@
                             <th>Username</th>
                             <th>Email</th>
                             <th>Role</th>
-                            <th>Joined Date</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
