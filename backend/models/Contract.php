@@ -3,7 +3,7 @@
 // Contract.php
 // Handles contract CRUD + email notifications
 // ============================================
- 
+
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
@@ -27,7 +27,13 @@ class Contract
     // --------------------
     public function getAllContracts()
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} ORDER BY expiryDate ASC");
+        // Updated to fetch manager email
+        $sql = "SELECT c.*, u.email AS manager_email, u.username AS manager_name
+                FROM {$this->table} c
+                INNER JOIN users u ON c.manager_id = u.userid
+                ORDER BY c.expiryDate ASC";
+
+        $stmt = $this->pdo->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -47,7 +53,7 @@ class Contract
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-     public function create($data, $userid)
+    public function create($data, $userid)
     {
         $fields = [];
         $placeholders = [];
@@ -80,7 +86,6 @@ class Contract
             return $this->pdo->lastInsertId();
         }
         error_log("Creating contract for user $userid with data: " . json_encode($data));
-
         return false;
     }
 
@@ -99,9 +104,7 @@ class Contract
         // File upload handling
         if (isset($_FILES['contractFile']) && $_FILES['contractFile']['error'] === UPLOAD_ERR_OK) {
             $uploadDir = __DIR__ . '/../uploads/';
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
-            }
+            if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
 
             $partiesName = isset($data['parties']) ? preg_replace('/[\/\\\\:*?"<>|]/', '_', $data['parties']) : 'contract';
             $extension = pathinfo($_FILES['contractFile']['name'], PATHINFO_EXTENSION);
@@ -178,28 +181,30 @@ class Contract
         $mail = new PHPMailer(true);
 
         try {
-            $senderEmail = getenv('SMTP_USER') ?: 'dynamic_email@example.com';
-            $senderName  = 'Contract Registry';
+            // ===== Sender info =====
+            $senderEmail    = 'uraniathomas23@gmail.com'; // Gmail sender
+            $senderName     = 'Contract Registry';
+            $senderPassword = 'lkmkivxthjizqojc';   // Gmail App Password
 
             $mail->isSMTP();
-            $mail->Host = 'smtp.gmail.com';
-            $mail->SMTPAuth = true;
-            $mail->Username = $senderEmail;
-            $mail->Password = getenv('SMTP_PASS') ?: 'YOUR_APP_PASSWORD_HERE';
+            $mail->Host       = 'smtp.gmail.com';
+            $mail->SMTPAuth   = true;
+            $mail->Username   = $senderEmail;
+            $mail->Password   = $senderPassword;
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port = 587;
+            $mail->Port       = 587;
 
             $mail->setFrom($senderEmail, $senderName);
             $mail->addAddress($recipientEmail);
 
             $mail->isHTML(false);
             $mail->Subject = 'Contract Expiry Notification';
-            $mail->Body = "Hello,\n\nA contract of type '{$contractType}' is expiring on {$expiryDate}.\nPlease take necessary action.\n\nThank you.";
+            $mail->Body    = "Hello,\n\nThe contract of '{$contractType}' is expiring on {$expiryDate}.\nPlease take necessary action.\n\nThank you.";
 
             $mail->send();
             return true;
         } catch (Exception $e) {
-            error_log("Mailer Error: {$e->getMessage()}");
+            error_log("Mailer Error for {$recipientEmail}: {$mail->ErrorInfo}");
             return false;
         }
     }

@@ -4,11 +4,12 @@ require 'models/contract.php';    // The Contract class
 
 $contract = new Contract($pdo);
 
-// Fetch all contracts from the database
+// Fetch all contracts along with manager emails
 $allContracts = $contract->getAllContracts();
 
 foreach ($allContracts as $c) {
-    $recipientEmail = 'uraniathomas@gmail.com'; // Replace with the actual manager email from your users table
+    // Use manager_email from the database
+    $recipientEmail = $c['manager_email'];
     $contractType   = $c['typeOfContract'];
     $expiryDate     = $c['expiryDate'];
 
@@ -16,8 +17,8 @@ foreach ($allContracts as $c) {
     $sent = $contract->sendEmailNotification($recipientEmail, $contractType, $expiryDate);
 
     if ($sent) {
-        echo "Email sent for contract ID {$c['contractid']} ({$contractType})<br>";
+        echo "Email sent for contract ID {$c['contractid']} ({$contractType}) to {$recipientEmail}<br>";
     } else {
-        echo "Failed to send email for contract ID {$c['contractid']}<br>";
+        echo "Failed to send email for contract ID {$c['contractid']} ({$contractType}) to {$recipientEmail}<br>";
     }
 }
