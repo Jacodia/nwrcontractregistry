@@ -1,4 +1,9 @@
 <?php
+// ============================================
+// Contract.php
+// Handles contract CRUD + email notifications
+// ============================================
+
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
@@ -11,16 +16,14 @@ class Contract
 {
     private $pdo;
     private $table = 'contracts';
-    private $logTable = 'notification_log'; // to track sent emails
 
     public function __construct($pdo)
     {
         $this->pdo = $pdo;
-        $this->createNotificationLogTable();
     }
 
     // --------------------
-    // CRUD Methods (unchanged)
+    // CRUD Methods
     // --------------------
     public function getAllContracts()
     {
@@ -29,27 +32,14 @@ class Contract
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-<<<<<<< HEAD
-    public function create($data)
-=======
-    public function getAll()
-    {
-        $sql = "SELECT contractid, parties, typeOfContract, duration, description, filepath, expiryDate, reviewByDate, contractValue, manager_id 
-                FROM {$this->table}";
-        $stmt = $this->pdo->query($sql);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
     public function getById($id)
     {
-        $sql = "SELECT * FROM {$this->table} WHERE contractid = :id";
-        $stmt = $this->pdo->prepare($sql);
+        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE contractid = :id");
         $stmt->execute(['id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function create($data, $userid)
->>>>>>> f290ba3682fa72e5d1e3914d00dcc499e6148e09
+    public function create($data)
     {
         $fields = [];
         $placeholders = [];
@@ -69,34 +59,44 @@ class Contract
             $values[] = $data['filepath'];
         }
 
-        // Add manager_id
-        $fields[] = "manager_id";
-        $placeholders[] = "?";
-        $values[] = $userid;
-
-        $sql = "INSERT INTO contracts (" . implode(", ", $fields) . ")
+        $sql = "INSERT INTO {$this->table} (" . implode(", ", $fields) . ")
                 VALUES (" . implode(", ", $placeholders) . ")";
         $stmt = $this->pdo->prepare($sql);
         if ($stmt->execute($values)) {
             return $this->pdo->lastInsertId();
         }
-        error_log("Creating contract for user $userid with data: " . json_encode($data));
-
         return false;
     }
 
-<<<<<<< HEAD
-    // --------------------
-    // Email Notification Methods
-    // --------------------
-=======
-    public function update($id, $data, $userid)
+    public function update($id, $data)
     {
         $fields = [];
         $values = [];
->>>>>>> f290ba3682fa72e5d1e3914d00dcc499e6148e09
 
-    // Send notifications for all managers (for cron job)
+        foreach (['parties','typeOfContract','duration','contractValue','description','expiryDate','reviewByDate'] as $col) {
+            if (isset($data[$col])) {
+                $fields[] = "$col = ?";
+                $values[] = $data[$col];
+            }
+        }
+
+        if (empty($fields)) return false;
+
+        $values[] = $id;
+        $sql = "UPDATE {$this->table} SET " . implode(", ", $fields) . " WHERE contractid = ?";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute($values);
+    }
+
+    public function delete($id)
+    {
+        $stmt = $this->pdo->prepare("DELETE FROM {$this->table} WHERE contractid = :id");
+        return $stmt->execute(['id' => $id]);
+    }
+
+    // --------------------
+    // Email Notification Methods
+    // --------------------
     public function sendExpiryNotifications()
     {
         $this->checkAndSend(90, 'weekly');  // 3 months
@@ -104,46 +104,26 @@ class Contract
         $this->checkAndSend(30, 'daily');   // 1 month
     }
 
-    // Send notifications only for a specific manager (on login)
-    public function sendExpiryNotificationsForManager($managerId)
-    {
-        $sql = "SELECT c.*, u.email AS manager_email
-                FROM {$this->table} c
-                INNER JOIN users u ON c.manager_id = u.userid
-                WHERE c.manager_id = :manager_id
-                  AND c.expiryDate BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)";
-
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute(['manager_id' => $managerId]);
-        $contracts = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        foreach ($contracts as $contract) {
-            $recipientEmail = $contract['manager_email'];
-            if (filter_var($recipientEmail, FILTER_VALIDATE_EMAIL) && !$this->hasSentNotification($contract['contractid'], $recipientEmail)) {
-                $this->sendEmailNotification($recipientEmail, $contract['typeOfContract'], $contract['expiryDate']);
-                $this->logNotification($contract['contractid'], $recipientEmail);
-            }
-        }
-    }
-
     private function checkAndSend($days, $frequency)
     {
+        if (!$this->shouldSend($frequency)) return;
+
         $sql = "SELECT c.*, u.email AS manager_email
                 FROM {$this->table} c
                 INNER JOIN users u ON c.manager_id = u.userid
                 WHERE c.expiryDate BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL :days DAY)";
-
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['days' => $days]);
         $contracts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         foreach ($contracts as $contract) {
-            if (!$this->shouldSend($frequency)) continue;
-
             $recipientEmail = $contract['manager_email'];
-            if (filter_var($recipientEmail, FILTER_VALIDATE_EMAIL) && !$this->hasSentNotification($contract['contractid'], $recipientEmail)) {
-                $this->sendEmailNotification($recipientEmail, $contract['typeOfContract'], $contract['expiryDate']);
-                $this->logNotification($contract['contractid'], $recipientEmail);
+            if (filter_var($recipientEmail, FILTER_VALIDATE_EMAIL)) {
+                $this->sendEmailNotification(
+                    $recipientEmail,
+                    $contract['typeOfContract'],
+                    $contract['expiryDate']
+                );
             }
         }
     }
@@ -157,9 +137,11 @@ class Contract
         return false;
     }
 
-    private function sendEmailNotification($recipientEmail, $contractType, $expiryDate)
+    // Public so it can be tested directly
+    public function sendEmailNotification($recipientEmail, $contractType, $expiryDate)
     {
         $mail = new PHPMailer(true);
+
         try {
             $senderEmail = getenv('SMTP_USER') ?: 'dynamic_email@example.com';
             $senderName  = 'Contract Registry';
@@ -180,36 +162,10 @@ class Contract
             $mail->Body = "Hello,\n\nA contract of type '{$contractType}' is expiring on {$expiryDate}.\nPlease take necessary action.\n\nThank you.";
 
             $mail->send();
+            return true;
         } catch (Exception $e) {
             error_log("Mailer Error: {$e->getMessage()}");
+            return false;
         }
-    }
-
-    // --------------------
-    // Notification Logging (prevents duplicates)
-    // --------------------
-    private function createNotificationLogTable()
-    {
-        $sql = "CREATE TABLE IF NOT EXISTS {$this->logTable} (
-                    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                    contract_id INT UNSIGNED NOT NULL,
-                    email VARCHAR(255) NOT NULL,
-                    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    UNIQUE KEY unique_notification (contract_id, email)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
-        $this->pdo->exec($sql);
-    }
-
-    private function hasSentNotification($contractId, $email)
-    {
-        $stmt = $this->pdo->prepare("SELECT id FROM {$this->logTable} WHERE contract_id = ? AND email = ?");
-        $stmt->execute([$contractId, $email]);
-        return $stmt->fetch() ? true : false;
-    }
-
-    private function logNotification($contractId, $email)
-    {
-        $stmt = $this->pdo->prepare("INSERT IGNORE INTO {$this->logTable} (contract_id, email) VALUES (?, ?)");
-        $stmt->execute([$contractId, $email]);
     }
 }

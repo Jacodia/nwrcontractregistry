@@ -1,17 +1,23 @@
 <?php
-require __DIR__ . '/config/db.php';
-require __DIR__ . '/models/Contract.php';
-
-// Set test recipient and contract details
-$testRecipient = 'raybicycle@gmail.com'; // Change to your email for testing
-$testContractType = 'Test Contract';
-$testExpiryDate = date('Y-m-d', strtotime('+10 days'));
+require 'config/db.php';           // Your PDO connection
+require 'models/contract.php';    // The Contract class
 
 $contract = new Contract($pdo);
 
-// Directly test the email notification method
-$contract->sendEmailNotification1($testRecipient, $testContractType, $testExpiryDate);
+// Fetch all contracts from the database
+$allContracts = $contract->getAllContracts();
 
-echo "Test email sent (if no errors above). Check your inbox.";
+foreach ($allContracts as $c) {
+    $recipientEmail = 'uraniathomas@gmail.com'; // Replace with the actual manager email from your users table
+    $contractType   = $c['typeOfContract'];
+    $expiryDate     = $c['expiryDate'];
 
-?>
+    // Send email directly
+    $sent = $contract->sendEmailNotification($recipientEmail, $contractType, $expiryDate);
+
+    if ($sent) {
+        echo "Email sent for contract ID {$c['contractid']} ({$contractType})<br>";
+    } else {
+        echo "Failed to send email for contract ID {$c['contractid']}<br>";
+    }
+}
