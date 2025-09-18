@@ -6,75 +6,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Contract</title>
     <link rel="stylesheet" href="../css/style.css">
-    <style>
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-left: auto;
-            padding-right: 1rem;
-        }
-        
-        .user-badge {
-            background: #007bff;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            text-transform: uppercase;
-        }
-        
-        .user-badge.admin { background: #dc3545; }
-        .user-badge.manager { background: #28a745; }
-        .user-badge.user { background: #6c757d; }
-        
-        .logout-btn {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-        
-        .logout-btn:hover { background: #c82333; }
-        
-        .access-denied {
-            text-align: center;
-            padding: 3rem;
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
-            border-radius: 8px;
-        }
-    </style>
+    <link rel="stylesheet" href="../css/manage_contract.css">
 </head>
 
 <body>
-    <div class="navbar">
-        <!-- Links on the left -->
-        <ul class="nav-links" id="nav-links">
-            <li><a href="dashboard.html">Dashboard</a></li>
-            <li><a href="manage_contract.html">Manage Contract</a></li>
-            <li id="users-nav" style="display: none;">
-                <a href="users.php">Users</a>
-            </li>
+    <div class="navbar" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: nowrap; padding: 0 1rem; min-height: 70px; background: #0758aa;">
+        <ul class="nav-links" id="nav-links" style="display: flex; align-items: center; gap: 1.5rem; margin: 0; padding: 0; list-style: none;">
+            <li><a href="dashboard.html" style="color: #fff; text-decoration: none; font-weight: 500;">Dashboard</a></li>
+            <li><a href="manage_contract.html" style="color: #fff; text-decoration: none; font-weight: 500;">Manage Contract</a></li>
+            <li id="users-nav" style="display: none;"><a href="users.php" style="color: #fff; text-decoration: none; font-weight: 500;">Users</a></li>
         </ul>
-
-        <!-- User info and logout -->
-        <div class="user-info" id="user-info">
+        <div class="user-info" id="user-info" style="display: flex; align-items: center; gap: 1rem; margin-left: 1.5rem;">
             <span id="username-display">Loading...</span>
             <span id="role-badge" class="user-badge">user</span>
             <button class="logout-btn" onclick="logout()">Logout</button>
         </div>
-
-        <!-- Logo on the right -->
-        <div class="nwr_logo">
+        <div class="nwr_logo" style="margin-left: 1.5rem;">
             <img src="../images/nwr_logo.png" alt="NWR Logo" style="height:60px;">
         </div>
     </div>
+    
+    <style>@media (max-width: 900px) {.navbar {flex-direction: row;flex-wrap: nowrap;padding: 0 0.5rem;}.nav-links {gap: 0.7rem !important;}.user-info {gap: 0.5rem !important;}.nwr_logo img {height: 40px !important;}}@media (max-width: 600px) {.navbar {flex-direction: row;flex-wrap: nowrap;padding: 0 0.2rem;}.nav-links {gap: 0.3rem !important;}.user-info {gap: 0.3rem !important;font-size: 0.85rem;}.nwr_logo img {height: 30px !important;}}.navbar .nav-links li a:hover {text-decoration: underline;}</style>
 
     <div id="access-denied" class="access-denied" style="display: none;">
         <h2>Access Denied</h2>
@@ -94,7 +46,7 @@
             <button class="tab" data-tab="edit">Edit Contract</button>
             <button class="tab" data-tab="delete">Delete Contract</button>
         </div>
-
+        
         <!-- Create Contract Tab -->
         <div id="create-tab" class="tab-content active">
             <h2>Add a New Contract</h2>
@@ -135,7 +87,8 @@
                     <div class="form-group">
                         <label for="description">Description</label>
                         <textarea id="description" name="description" rows="3"
-                            placeholder="Enter contract description"></textarea>
+                            placeholder="Enter contract description" style="width: 100%; padding: 8px; border:  none; border-radius: 0px; background-color: #0758aa;
+    color: #ecf0f1;"></textarea>
                     </div>
                     <div class="form-group">
                         <label for="contractFile">Upload Contract Document</label>
@@ -268,7 +221,7 @@
             </div>
 
             <div id="delete-confirmation"
-                style="display: none; margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 5px;">
+                style="display: none; margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 5px; color: #333;">
                 <h3>Confirm Deletion</h3>
                 <p><strong>Contract ID:</strong> <span id="delete-contract-id"></span></p>
                 <p><strong>Parties:</strong> <span id="delete-contract-parties"></span></p>
@@ -283,467 +236,7 @@
         </div>
     </div>
 
-    <script>
-        // ===============================
-// Global Variables
-// ===============================
-let contracts = [];
-let selectedContract = null;
-let contractToDelete = null;
-let currentUser = null;
-
-// API base URL (backend entrypoint)
-const API_BASE = '/nwrcontractregistry/backend/index.php';
-
-// ===============================
-// Authentication & Authorization
-// ===============================
-async function checkAuth() {
-    try {
-        const response = await fetch('/nwrcontractregistry/backend/auth_handler.php?action=check');
-        const result = await response.json();
-
-        // Redirect to login if not logged in
-        if (!result.loggedIn) {
-            window.location.href = '../index.php';
-            return false;
-        }
-
-        currentUser = result.user;
-
-        // Restrict access → only managers & admins
-        if (currentUser.role !== 'manager' && currentUser.role !== 'admin') {
-            const deniedEl = document.getElementById('access-denied');
-            const mainEl = document.getElementById('main-container');
-            if (deniedEl) deniedEl.style.display = 'block';
-            if (mainEl) mainEl.style.display = 'none';
-            return false;
-        }
-
-        // Update UI with user info
-        updateUserInfo();
-
-        // Show main content if available
-        const mainEl = document.getElementById('main-container');
-        if (mainEl) mainEl.style.display = 'block';
-
-        return true;
-    } catch (error) {
-        console.error('Auth check failed:', error);
-        window.location.href = '../index.php';
-        return false;
-    }
-}
-
-// ===============================
-// User Info Display
-// ===============================
-function updateUserInfo() {
-    if (!currentUser) return;
-
-    const usernameEl = document.getElementById('username-display');
-    const roleBadge = document.getElementById('role-badge');
-
-    if (usernameEl) usernameEl.textContent = currentUser.username;
-    if (roleBadge) {
-        roleBadge.textContent = currentUser.role;
-        roleBadge.className = `user-badge ${currentUser.role}`;
-    }
-
-    // Show "Users" nav link only for admins
-    if (currentUser.role === 'admin') {
-        const usersNav = document.getElementById('users-nav');
-        if (usersNav) usersNav.style.display = 'block';
-    }
-}
-
-// ===============================
-// Logout
-// ===============================
-async function logout() {
-    try {
-        await fetch('/nwrcontractregistry/backend/auth_handler.php?action=logout', {
-            method: 'POST'
-        });
-        window.location.href = '../index.php';
-    } catch (error) {
-        console.error('Logout error:', error);
-        window.location.href = '../index.php';
-    }
-}
-
-// ===============================
-// Initialize Page (after DOM load)
-// ===============================
-document.addEventListener('DOMContentLoaded', async function () {
-    const hasAccess = await checkAuth();
-    if (hasAccess) {
-        initializeTabs();
-        loadContracts();
-        setupFormHandlers();
-    }
-});
-
-// ===============================
-// Tabs Handling
-// ===============================
-function initializeTabs() {
-    const tabs = document.querySelectorAll('.tab');
-    const tabContents = document.querySelectorAll('.tab-content');
-
-    tabs.forEach(tab => {
-        tab.addEventListener('click', function () {
-            const targetTab = this.dataset.tab;
-
-            // Reset all tabs & contents
-            tabs.forEach(t => t.classList.remove('active'));
-            tabContents.forEach(tc => tc.classList.remove('active'));
-
-            // Activate clicked tab & corresponding content
-            this.classList.add('active');
-            const targetContent = document.getElementById(targetTab + '-tab');
-            if (targetContent) targetContent.classList.add('active');
-
-            // Refresh contracts when switching to edit/delete
-            if (targetTab === 'edit' || targetTab === 'delete') {
-                loadContracts();
-            }
-        });
-    });
-}
-
-// ===============================
-// Load & Update Contracts
-// ===============================
-async function loadContracts() {
-    try {
-        const response = await fetch(`${API_BASE}?action=list`);
-        if (!response.ok) {
-            if (response.status === 401) {
-                window.location.href = '../index.php';
-                return;
-            }
-            throw new Error('Failed to fetch contracts');
-        }
-
-        contracts = await response.json();
-        console.log('Loaded contracts:', contracts.length);
-
-        updateContractLists();
-    } catch (error) {
-        console.error('Error loading contracts:', error);
-        showMessage('Error loading contracts: ' + error.message, 'error');
-    }
-}
-
-function updateContractLists() {
-    updateEditContractList();
-    updateDeleteContractList();
-}
-
-function updateEditContractList() {
-    const container = document.getElementById('contract-list');
-    if (!container) return;
-
-    if (contracts.length === 0) {
-        container.innerHTML = '<div class="loading">No contracts found</div>';
-        return;
-    }
-
-    container.innerHTML = contracts.map(contract => `
-        <div class="contract-item" onclick="selectContractForEdit(${contract.contractid}, event)">
-            <h4>ID: ${contract.contractid} - ${contract.parties}</h4>
-            <p><strong>Type:</strong> ${contract.typeOfContract || 'N/A'}</p>
-            <p><strong>Value:</strong> ${formatCurrency(contract.contractValue)} | <strong>Expires:</strong> ${contract.expiryDate || 'N/A'}</p>
-        </div>
-    `).join('');
-}
-
-function updateDeleteContractList() {
-    const container = document.getElementById('delete-contract-list');
-    if (!container) return;
-
-    if (contracts.length === 0) {
-        container.innerHTML = '<div class="loading">No contracts found</div>';
-        return;
-    }
-
-    container.innerHTML = contracts.map(contract => `
-        <div class="contract-item" onclick="selectContractForDelete(${contract.contractid}, event)">
-            <h4>ID: ${contract.contractid} - ${contract.parties}</h4>
-            <p><strong>Type:</strong> ${contract.typeOfContract || 'N/A'}</p>
-            <p><strong>Value:</strong> ${formatCurrency(contract.contractValue)} | <strong>Expires:</strong> ${contract.expiryDate || 'N/A'}</p>
-        </div>
-    `).join('');
-}
-
-// ===============================
-// Forms
-// ===============================
-function setupFormHandlers() {
-    const createForm = document.getElementById('create-form');
-    const editForm = document.getElementById('edit-form');
-
-    if (createForm) createForm.addEventListener('submit', handleCreateContract);
-    if (editForm) editForm.addEventListener('submit', handleUpdateContract);
-}
-
-// Handle contract creation
-async function handleCreateContract(e) {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-
-    try {
-        const response = await fetch(`${API_BASE}?action=create`, {
-            method: 'POST',
-            body: formData
-        });
-
-        if (!response.ok) {
-            if (response.status === 401) {
-                window.location.href = '../index.php';
-                return;
-            }
-            if (response.status === 403) {
-                showMessage('Access denied. You do not have permission to create contracts.', 'error');
-                return;
-            }
-            throw new Error('Failed to create contract: ' + response.statusText);
-        }
-
-        await response.json();
-        showMessage('Contract created successfully!', 'success');
-        e.target.reset();
-        loadContracts();
-    } catch (error) {
-        console.error('Error creating contract:', error);
-        showMessage('Error creating contract: ' + error.message, 'error');
-    }
-}
-
-// ===============================
-// Edit Contracts
-// ===============================
-function selectContractForEdit(contractId, event) {
-    const contract = contracts.find(c => c.contractid == contractId);
-    if (!contract) return;
-
-    selectedContract = contract;
-
-    // Highlight selected
-    document.querySelectorAll('#contract-list .contract-item').forEach(item => {
-        item.classList.remove('selected');
-    });
-    if (event?.target.closest('.contract-item')) {
-        event.target.closest('.contract-item').classList.add('selected');
-    }
-
-    // Show form & populate fields
-    const editForm = document.getElementById('edit-form');
-    const placeholder = document.getElementById('edit-placeholder');
-    if (editForm && placeholder) {
-        editForm.style.display = 'block';
-        placeholder.style.display = 'none';
-    }
-
-    populateEditForm(contract);
-}
-
-function populateEditForm(contract) {
-    const mapping = {
-        'edit-contractid': contract.contractid,
-        'edit-parties': contract.parties || '',
-        'edit-typeOfContract': contract.typeOfContract || '',
-        'edit-duration': contract.duration || '',
-        'edit-contractValue': contract.contractValue || '',
-        'edit-description': contract.description || '',
-        'edit-expiryDate': contract.expiryDate || '',
-        'edit-reviewByDate': contract.reviewByDate || ''
-    };
-
-    Object.entries(mapping).forEach(([id, value]) => {
-        const el = document.getElementById(id);
-        if (el) el.value = value;
-    });
-
-    // Handle file links
-    const viewContainer = document.getElementById('edit-view-file');
-    const viewLink = document.getElementById('view-contract-file');
-    const downloadLink = document.getElementById('download-contract-file');
-
-    if (contract.filepath && viewContainer && viewLink && downloadLink) {
-        const fileUrl = `/nwrcontractregistry/backend/${contract.filepath}`;
-        viewLink.href = fileUrl;
-        downloadLink.href = fileUrl;
-        viewContainer.style.display = 'block';
-    } else if (viewContainer && viewLink && downloadLink) {
-        viewContainer.style.display = 'none';
-        viewLink.href = '#';
-        downloadLink.href = '#';
-    }
-}
-
-function clearEditForm() {
-    const editForm = document.getElementById('edit-form');
-    const placeholder = document.getElementById('edit-placeholder');
-
-    if (editForm && placeholder) {
-        editForm.style.display = 'none';
-        placeholder.style.display = 'block';
-        editForm.reset();
-    }
-    selectedContract = null;
-
-    document.querySelectorAll('#contract-list .contract-item').forEach(item => {
-        item.classList.remove('selected');
-    });
-}
-
-async function handleUpdateContract(e) {
-    e.preventDefault();
-
-    if (!selectedContract) {
-        showMessage('No contract selected for editing', 'error');
-        return;
-    }
-
-    const formData = new FormData(e.target);
-    const contractId = formData.get('contractid');
-    formData.delete('contractid');
-
-    try {
-        const response = await fetch(`${API_BASE}?action=update&id=${contractId}`, {
-            method: 'POST',
-            body: formData
-        });
-
-        if (!response.ok) {
-            if (response.status === 401) {
-                window.location.href = '../index.php';
-                return;
-            }
-            if (response.status === 403) {
-                showMessage('Access denied. You do not have permission to edit contracts.', 'error');
-                return;
-            }
-            throw new Error('Failed to update contract');
-        }
-
-        await response.json();
-        showMessage('Contract updated successfully!', 'success');
-        clearEditForm();
-        loadContracts();
-    } catch (error) {
-        console.error('Error updating contract:', error);
-        showMessage('Error updating contract: ' + error.message, 'error');
-    }
-}
-
-// ===============================
-// Delete Contracts
-// ===============================
-function selectContractForDelete(contractId, event) {
-    const contract = contracts.find(c => c.contractid == contractId);
-    if (!contract) return;
-
-    contractToDelete = contract;
-
-    // Highlight selected
-    document.querySelectorAll('#delete-contract-list .contract-item').forEach(item => {
-        item.classList.remove('selected');
-    });
-    if (event?.target.closest('.contract-item')) {
-        event.target.closest('.contract-item').classList.add('selected');
-    }
-
-    // Show confirmation
-    const confirmation = document.getElementById('delete-confirmation');
-    if (confirmation) confirmation.style.display = 'block';
-
-    const mapping = {
-        'delete-contract-id': contract.contractid,
-        'delete-contract-parties': contract.parties || 'N/A',
-        'delete-contract-type': contract.typeOfContract || 'N/A',
-        'delete-contract-value': formatCurrency(contract.contractValue)
-    };
-
-    Object.entries(mapping).forEach(([id, value]) => {
-        const el = document.getElementById(id);
-        if (el) el.textContent = value;
-    });
-}
-
-async function confirmDelete() {
-    if (!contractToDelete) return;
-
-    const contractId = contractToDelete.contractid;
-    console.log('Deleting contract:', contractId);
-
-    try {
-        const response = await fetch(`${API_BASE}?action=delete&id=${contractId}`, {
-            method: 'DELETE'
-        });
-
-        if (!response.ok) {
-            if (response.status === 401) {
-                window.location.href = '../index.php';
-                return;
-            }
-            if (response.status === 403) {
-                showMessage('Access denied. You do not have permission to delete contracts.', 'error');
-                return;
-            }
-            throw new Error('Failed to delete contract');
-        }
-
-        await response.json();
-        showMessage('Contract deleted successfully!', 'success');
-        cancelDelete();
-        loadContracts();
-    } catch (error) {
-        console.error('Error deleting contract:', error);
-        showMessage('Error deleting contract: ' + error.message, 'error');
-    }
-}
-
-function cancelDelete() {
-    contractToDelete = null;
-    const confirmation = document.getElementById('delete-confirmation');
-    if (confirmation) confirmation.style.display = 'none';
-
-    document.querySelectorAll('#delete-contract-list .contract-item').forEach(item => {
-        item.classList.remove('selected');
-    });
-}
-
-// ===============================
-// Helpers
-// ===============================
-function showMessage(message, type) {
-    const messageEl = document.getElementById('message');
-    if (!messageEl) return;
-
-    messageEl.textContent = message;
-    messageEl.className = `message ${type}`;
-    messageEl.style.display = 'block';
-
-    // Auto-hide after 5 seconds
-    setTimeout(() => {
-        messageEl.style.display = 'none';
-    }, 5000);
-}
-
-function formatCurrency(value) {
-    if (!value || isNaN(value)) return 'N/A';
-    const numValue = parseFloat(value);
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 2
-    }).format(numValue);
-}
-
-    </script>
+    <script src="../js/manage_contract.js"></script>
 </body>
 
 </html>

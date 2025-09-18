@@ -1,315 +1,495 @@
-// Global variables
+// ===============================
+// Global Variables
+// ===============================
 let contracts = [];
 let selectedContract = null;
 let contractToDelete = null;
+let currentUser = null;
 
-// API base URL
-const API_BASE = '/nwrcontractregistry/backend/index.php';
+// API base URL (backend entrypoint)
+const API_BASE = "/nwrcontractregistry/backend/index.php";
 
-// Initialize page
-document.addEventListener('DOMContentLoaded', function() {
+// ===============================
+// Authentication & Authorization
+// ===============================
+async function checkAuth() {
+  try {
+    const response = await fetch(
+      "/nwrcontractregistry/backend/auth_handler.php?action=check"
+    );
+    const result = await response.json();
+
+    // Redirect to login if not logged in
+    if (!result.loggedIn) {
+      window.location.href = "../index.php";
+      return false;
+    }
+
+    currentUser = result.user;
+
+    // Restrict access → only managers & admins
+    if (currentUser.role !== "manager" && currentUser.role !== "admin") {
+      const deniedEl = document.getElementById("access-denied");
+      const mainEl = document.getElementById("main-container");
+      if (deniedEl) deniedEl.style.display = "block";
+      if (mainEl) mainEl.style.display = "none";
+      return false;
+    }
+
+    // Update UI with user info
+    updateUserInfo();
+
+    // Show main content if available
+    const mainEl = document.getElementById("main-container");
+    if (mainEl) mainEl.style.display = "block";
+
+    return true;
+  } catch (error) {
+    console.error("Auth check failed:", error);
+    window.location.href = "../index.php";
+    return false;
+  }
+}
+
+// ===============================
+// User Info Display
+// ===============================
+function updateUserInfo() {
+  if (!currentUser) return;
+
+  const usernameEl = document.getElementById("username-display");
+  const roleBadge = document.getElementById("role-badge");
+
+  if (usernameEl) usernameEl.textContent = currentUser.username;
+  if (roleBadge) {
+    roleBadge.textContent = currentUser.role;
+    roleBadge.className = `user-badge ${currentUser.role}`;
+  }
+
+  // Show "Users" nav link only for admins
+  if (currentUser.role === "admin") {
+    const usersNav = document.getElementById("users-nav");
+    if (usersNav) usersNav.style.display = "block";
+  }
+}
+
+// ===============================
+// Logout
+// ===============================
+async function logout() {
+  try {
+    await fetch("/nwrcontractregistry/backend/auth_handler.php?action=logout", {
+      method: "POST",
+    });
+    window.location.href = "../index.php";
+  } catch (error) {
+    console.error("Logout error:", error);
+    window.location.href = "../index.php";
+  }
+}
+
+// ===============================
+// Initialize Page (after DOM load)
+// ===============================
+document.addEventListener("DOMContentLoaded", async function () {
+  const hasAccess = await checkAuth();
+  if (hasAccess) {
     initializeTabs();
     loadContracts();
     setupFormHandlers();
+  }
 });
 
-// Tab functionality
+// ===============================
+// Tabs Handling
+// ===============================
 function initializeTabs() {
-    const tabs = document.querySelectorAll('.tab');
-    const tabContents = document.querySelectorAll('.tab-content');
-    
-    tabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-            const targetTab = this.dataset.tab;
-            
-            // Remove active class from all tabs and contents
-            tabs.forEach(t => t.classList.remove('active'));
-            tabContents.forEach(tc => tc.classList.remove('active'));
-            
-            // Add active class to clicked tab and corresponding content
-            this.classList.add('active');
-            document.getElementById(targetTab + '-tab').classList.add('active');
-            
-            // Refresh contracts list when switching to edit or delete tabs
-            if (targetTab === 'edit' || targetTab === 'delete') {
-                loadContracts();
-            }
-        });
+  const tabs = document.querySelectorAll(".tab");
+  const tabContents = document.querySelectorAll(".tab-content");
+
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", function () {
+      const targetTab = this.dataset.tab;
+
+      // Reset all tabs & contents
+      tabs.forEach((t) => t.classList.remove("active"));
+      tabContents.forEach((tc) => tc.classList.remove("active"));
+
+      // Activate clicked tab & corresponding content
+      this.classList.add("active");
+      const targetContent = document.getElementById(targetTab + "-tab");
+      if (targetContent) targetContent.classList.add("active");
+
+      // Refresh contracts when switching to edit/delete
+      if (targetTab === "edit" || targetTab === "delete") {
+        loadContracts();
+      }
     });
+  });
 }
 
-// Load contracts from backend
+// ===============================
+// Load & Update Contracts
+// ===============================
 async function loadContracts() {
-    try {
-        const response = await fetch(`${API_BASE}?action=list`);
-        if (!response.ok) throw new Error('Failed to fetch contracts');
-        
-        contracts = await response.json();
-        console.log('Loaded contracts:', contracts.length);
-        
-        updateContractLists();
-    } catch (error) {
-        console.error('Error loading contracts:', error);
-        showMessage('Error loading contracts: ' + error.message, 'error');
+  try {
+    const response = await fetch(`${API_BASE}?action=list`);
+    if (!response.ok) {
+      if (response.status === 401) {
+        window.location.href = "../index.php";
+        return;
+      }
+      throw new Error("Failed to fetch contracts");
     }
+
+    contracts = await response.json();
+    console.log("Loaded contracts:", contracts.length);
+
+    updateContractLists();
+  } catch (error) {
+    console.error("Error loading contracts:", error);
+    showMessage("Error loading contracts: " + error.message, "error");
+  }
 }
 
-// Update contract lists in edit and delete tabs
+
 function updateContractLists() {
-    updateEditContractList();
-    updateDeleteContractList();
+  updateEditContractList();
+  updateDeleteContractList();
 }
 
 function updateEditContractList() {
-    const container = document.getElementById('contract-list');
-    
-    if (contracts.length === 0) {
-        container.innerHTML = '<div class="loading">No contracts found</div>';
-        return;
-    }
-    
-    container.innerHTML = contracts.map(contract => `
-        <div class="contract-item" onclick="selectContractForEdit(${contract.contractid})">
+  const container = document.getElementById("contract-list");
+  if (!container) return;
+
+  if (contracts.length === 0) {
+    container.innerHTML = '<div class="loading">No contracts found</div>';
+    return;
+  }
+
+  container.innerHTML = contracts
+    .map(
+      (contract) => `
+        <div class="contract-item" onclick="selectContractForEdit(${
+          contract.contractid
+        }, event)">
             <h4>ID: ${contract.contractid} - ${contract.parties}</h4>
-            <p><strong>Type:</strong> ${contract.typeOfContract || 'N/A'}</p>
-            <p><strong>Value:</strong> ${formatCurrency(contract.contractValue)} | <strong>Expires:</strong> ${contract.expiryDate || 'N/A'}</p>
+            <p><strong>Type:</strong> ${contract.typeOfContract || "N/A"}</p>
+            <p><strong>Value:</strong> ${formatCurrency(
+              contract.contractValue
+            )} | <strong>Expires:</strong> ${contract.expiryDate || "N/A"}</p>
         </div>
-    `).join('');
+    `
+    )
+    .join("");
 }
 
 function updateDeleteContractList() {
-    const container = document.getElementById('delete-contract-list');
-    
-    if (contracts.length === 0) {
-        container.innerHTML = '<div class="loading">No contracts found</div>';
-        return;
-    }
-    
-    container.innerHTML = contracts.map(contract => `
-        <div class="contract-item" onclick="selectContractForDelete(${contract.contractid})">
+  const container = document.getElementById("delete-contract-list");
+  if (!container) return;
+
+  if (contracts.length === 0) {
+    container.innerHTML = '<div class="loading">No contracts found</div>';
+    return;
+  }
+
+  container.innerHTML = contracts
+    .map(
+      (contract) => `
+        <div class="contract-item" onclick="selectContractForDelete(${
+          contract.contractid
+        }, event)">
             <h4>ID: ${contract.contractid} - ${contract.parties}</h4>
-            <p><strong>Type:</strong> ${contract.typeOfContract || 'N/A'}</p>
-            <p><strong>Value:</strong> ${formatCurrency(contract.contractValue)} | <strong>Expires:</strong> ${contract.expiryDate || 'N/A'}</p>
+            <p><strong>Type:</strong> ${contract.typeOfContract || "N/A"}</p>
+            <p><strong>Value:</strong> ${formatCurrency(
+              contract.contractValue
+            )} | <strong>Expires:</strong> ${contract.expiryDate || "N/A"}</p>
         </div>
-    `).join('');
+    `
+    )
+    .join("");
 }
 
-// Setup form handlers
+// ===============================
+// Forms
+// ===============================
 function setupFormHandlers() {
-    // Create form handler
-    document.getElementById('create-form').addEventListener('submit', handleCreateContract);
-    
-    // Edit form handler
-    document.getElementById('edit-form').addEventListener('submit', handleUpdateContract);
+  const createForm = document.getElementById("create-form");
+  const editForm = document.getElementById("edit-form");
+
+  if (createForm) createForm.addEventListener("submit", handleCreateContract);
+  if (editForm) editForm.addEventListener("submit", handleUpdateContract);
 }
 
-// Handle create contract
+// Handle contract creation
 async function handleCreateContract(e) {
-    e.preventDefault();
+  e.preventDefault();
+  const formData = new FormData(e.target);
 
-    const formData = new FormData(e.target);
-    console.log('Creating contract (FormData):', ...formData);
-    try {
-        const response = await fetch(`${API_BASE}?action=create`, {
-            method: 'POST',
-            body: formData // Do not set headers, browser will set multipart/form-data
-        });
-
-        if (!response.ok) throw new Error('Failed to create contract: ' + response.statusText + error);
-
-        const result = await response.json();
-        console.log('Create result:', result);
-
-        showMessage('Contract created successfully!', 'success');
-
-        e.target.reset();
-        loadContracts(); // Refresh the lists
-        
-    } catch (error) {
-        console.error('Error creating contract:', error);
-        showMessage('Error creating contract: ' + error.message, 'error');
-    }
-}
-
-// Select contract for editing
-function selectContractForEdit(contractId) {
-    const contract = contracts.find(c => c.contractid == contractId);
-    if (!contract) return;
-    
-    selectedContract = contract;
-    
-    // Update selected state in UI
-    document.querySelectorAll('#contract-list .contract-item').forEach(item => {
-        item.classList.remove('selected');
+  try {
+    const response = await fetch(`${API_BASE}?action=create`, {
+      method: "POST",
+      body: formData,
     });
-    event.target.closest('.contract-item').classList.add('selected');
-    
-    // Show edit form and populate it
-    document.getElementById('edit-form').style.display = 'block';
-    document.getElementById('edit-placeholder').style.display = 'none';
-    
-    populateEditForm(contract);
-}
 
-// Populate edit form with contract data
-function populateEditForm(contract) {
-    document.getElementById('edit-contractid').value = contract.contractid;
-    document.getElementById('edit-parties').value = contract.parties || '';
-    document.getElementById('edit-typeOfContract').value = contract.typeOfContract || '';
-    document.getElementById('edit-duration').value = contract.duration || '';
-    document.getElementById('edit-contractValue').value = contract.contractValue || '';
-    document.getElementById('edit-description').value = contract.description || '';
-    document.getElementById('edit-expiryDate').value = contract.expiryDate || '';
-    document.getElementById('edit-reviewByDate').value = contract.reviewByDate || '';
-
-    // Handle file view/download links
-    const viewContainer = document.getElementById('edit-view-file');
-    const viewLink = document.getElementById('view-contract-file');
-    const downloadLink = document.getElementById('download-contract-file');
-
-    if (contract.filepath) {
-        const fileUrl = `/nwrcontractregistry/backend/${contract.filepath}`;
-        viewLink.href = fileUrl;
-        downloadLink.href = fileUrl;
-        viewContainer.style.display = 'block';
-    } else {
-        viewContainer.style.display = 'none';
-        viewLink.href = '#';
-        downloadLink.href = '#';
-    }
-}
-
-// Clear edit form
-function clearEditForm() {
-    document.getElementById('edit-form').style.display = 'none';
-    document.getElementById('edit-placeholder').style.display = 'block';
-    document.getElementById('edit-form').reset();
-    selectedContract = null;
-    
-    // Remove selected state
-    document.querySelectorAll('#contract-list .contract-item').forEach(item => {
-        item.classList.remove('selected');
-    });
-}
-
-// Handle update contract
-async function handleUpdateContract(e) {
-    e.preventDefault();
-    
-    if (!selectedContract) {
-        showMessage('No contract selected for editing', 'error');
+    if (!response.ok) {
+      if (response.status === 401) {
+        window.location.href = "../index.php";
         return;
+      }
+      if (response.status === 403) {
+        showMessage(
+          "Access denied. You do not have permission to create contracts.",
+          "error"
+        );
+        return;
+      }
+      throw new Error("Failed to create contract: " + response.statusText);
     }
 
-    const formData = new FormData(e.target);
-    const contractId = formData.get('contractid');
-    formData.delete('contractid'); // backend probably uses the ?id= param
-    
-    console.log('Updating contract (FormData):', ...formData);
+    await response.json();
+    showMessage("Contract created successfully!", "success");
+    e.target.reset();
+    loadContracts();
+  } catch (error) {
+    console.error("Error creating contract:", error);
+    showMessage("Error creating contract: " + error.message, "error");
+  }
+}
 
-    try {
-        const response = await fetch(`${API_BASE}?action=update&id=${contractId}`, {
-            method: 'POST',
-            body: formData // same style as create
-        });
+// ===============================
+// Edit Contracts
+// ===============================
+function selectContractForEdit(contractId, event) {
+  const contract = contracts.find((c) => c.contractid == contractId);
+  if (!contract) return;
 
-        if (!response.ok) throw new Error('Failed to update contract');
+  selectedContract = contract;
 
-        const result = await response.json();
-        console.log('Update result:', result);
+  // Highlight selected
+  document.querySelectorAll("#contract-list .contract-item").forEach((item) => {
+    item.classList.remove("selected");
+  });
+  if (event?.target.closest(".contract-item")) {
+    event.target.closest(".contract-item").classList.add("selected");
+  }
 
-        showMessage('Contract updated successfully!', 'success');
-        clearEditForm();
-        loadContracts();
+  // Show form & populate fields
+  const editForm = document.getElementById("edit-form");
+  const placeholder = document.getElementById("edit-placeholder");
+  if (editForm && placeholder) {
+    editForm.style.display = "block";
+    placeholder.style.display = "none";
+  }
 
-    } catch (error) {
-        console.error('Error updating contract:', error);
-        showMessage('Error updating contract: ' + error.message, 'error');
-    }
+  populateEditForm(contract);
 }
 
 
+function populateEditForm(contract) {
+  const mapping = {
+    "edit-contractid": contract.contractid,
+    "edit-parties": contract.parties || "",
+    "edit-typeOfContract": contract.typeOfContract || "",
+    "edit-duration": contract.duration || "",
+    "edit-contractValue": contract.contractValue || "",
+    "edit-description": contract.description || "",
+    "edit-expiryDate": contract.expiryDate || "",
+    "edit-reviewByDate": contract.reviewByDate || "",
+  };
 
-// Select contract for deletion
-function selectContractForDelete(contractId) {
-    const contract = contracts.find(c => c.contractid == contractId);
-    if (!contract) return;
-    
-    contractToDelete = contract;
-    
-    // Update selected state in UI
-    document.querySelectorAll('#delete-contract-list .contract-item').forEach(item => {
-        item.classList.remove('selected');
+  Object.entries(mapping).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = value;
+  });
+
+  // Handle file links
+  const viewContainer = document.getElementById("edit-view-file");
+  const viewLink = document.getElementById("view-contract-file");
+  const downloadLink = document.getElementById("download-contract-file");
+
+  if (contract.filepath && viewContainer && viewLink && downloadLink) {
+    const fileUrl = `/nwrcontractregistry/backend/${contract.filepath}`;
+    viewLink.href = fileUrl;
+    downloadLink.href = fileUrl;
+    viewContainer.style.display = "block";
+  } else if (viewContainer && viewLink && downloadLink) {
+    viewContainer.style.display = "none";
+    viewLink.href = "#";
+    downloadLink.href = "#";
+  }
+}
+
+
+function clearEditForm() {
+  const editForm = document.getElementById("edit-form");
+  const placeholder = document.getElementById("edit-placeholder");
+
+  if (editForm && placeholder) {
+    editForm.style.display = "none";
+    placeholder.style.display = "block";
+    editForm.reset();
+  }
+  selectedContract = null;
+
+  document.querySelectorAll("#contract-list .contract-item").forEach((item) => {
+    item.classList.remove("selected");
+  });
+}
+
+
+async function handleUpdateContract(e) {
+  e.preventDefault();
+
+  if (!selectedContract) {
+    showMessage("No contract selected for editing", "error");
+    return;
+  }
+
+  const formData = new FormData(e.target);
+  const contractId = formData.get("contractid");
+  formData.delete("contractid");
+
+  try {
+    const response = await fetch(`${API_BASE}?action=update&id=${contractId}`, {
+      method: "POST",
+      body: formData,
     });
-    event.target.closest('.contract-item').classList.add('selected');
-    
-    // Show confirmation
-    document.getElementById('delete-confirmation').style.display = 'block';
-    document.getElementById('delete-contract-id').textContent = contract.contractid;
-    document.getElementById('delete-contract-parties').textContent = contract.parties || 'N/A';
-    document.getElementById('delete-contract-type').textContent = contract.typeOfContract || 'N/A';
-    document.getElementById('delete-contract-value').textContent = formatCurrency(contract.contractValue);
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        window.location.href = "../index.php";
+        return;
+      }
+      if (response.status === 403) {
+        showMessage(
+          "Access denied. You do not have permission to edit contracts.",
+          "error"
+        );
+        return;
+      }
+      throw new Error("Failed to update contract");
+    }
+
+    await response.json();
+    showMessage("Contract updated successfully!", "success");
+    clearEditForm();
+    loadContracts();
+  } catch (error) {
+    console.error("Error updating contract:", error);
+    showMessage("Error updating contract: " + error.message, "error");
+  }
 }
 
-// Confirm deletion
+// ===============================
+// Delete Contracts
+// ===============================
+function selectContractForDelete(contractId, event) {
+  const contract = contracts.find((c) => c.contractid == contractId);
+  if (!contract) return;
+
+  contractToDelete = contract;
+
+  // Highlight selected
+  document
+    .querySelectorAll("#delete-contract-list .contract-item")
+    .forEach((item) => {
+      item.classList.remove("selected");
+    });
+  if (event?.target.closest(".contract-item")) {
+    event.target.closest(".contract-item").classList.add("selected");
+  }
+
+  // Show confirmation
+  const confirmation = document.getElementById("delete-confirmation");
+  if (confirmation) confirmation.style.display = "block";
+
+  const mapping = {
+    "delete-contract-id": contract.contractid,
+    "delete-contract-parties": contract.parties || "N/A",
+    "delete-contract-type": contract.typeOfContract || "N/A",
+    "delete-contract-value": formatCurrency(contract.contractValue),
+  };
+
+  Object.entries(mapping).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  });
+}
+
 async function confirmDelete() {
-    if (!contractToDelete) return;
-    
-    const contractId = contractToDelete.contractid;
-    console.log('Deleting contract:', contractId);
-    
-    try {
-        const response = await fetch(`${API_BASE}?action=delete&id=${contractId}`, {
-            method: 'DELETE'
-        });
-        
-        if (!response.ok) throw new Error('Failed to delete contract');
-        
-        const result = await response.json();
-        console.log('Delete result:', result);
-        
-        showMessage('Contract deleted successfully!', 'success');
-        cancelDelete();
-        loadContracts(); // Refresh the lists
-        
-    } catch (error) {
-        console.error('Error deleting contract:', error);
-        showMessage('Error deleting contract: ' + error.message, 'error');
+  if (!contractToDelete) return;
+
+  const contractId = contractToDelete.contractid;
+  console.log("Deleting contract:", contractId);
+
+  try {
+    const response = await fetch(`${API_BASE}?action=delete&id=${contractId}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        window.location.href = "../index.php";
+        return;
+      }
+      if (response.status === 403) {
+        showMessage(
+          "Access denied. You do not have permission to delete contracts.",
+          "error"
+        );
+        return;
+      }
+      throw new Error("Failed to delete contract");
     }
+
+    await response.json();
+    showMessage("Contract deleted successfully!", "success");
+    cancelDelete();
+    loadContracts();
+  } catch (error) {
+    console.error("Error deleting contract:", error);
+    showMessage("Error deleting contract: " + error.message, "error");
+  }
 }
 
-// Cancel deletion
+
 function cancelDelete() {
-    contractToDelete = null;
-    document.getElementById('delete-confirmation').style.display = 'none';
-    
-    // Remove selected state
-    document.querySelectorAll('#delete-contract-list .contract-item').forEach(item => {
-        item.classList.remove('selected');
+  contractToDelete = null;
+  const confirmation = document.getElementById("delete-confirmation");
+  if (confirmation) confirmation.style.display = "none";
+
+  document
+    .querySelectorAll("#delete-contract-list .contract-item")
+    .forEach((item) => {
+      item.classList.remove("selected");
     });
 }
 
-// Show message to user
+// ===============================
+// Helpers
+// ===============================
 function showMessage(message, type) {
-    const messageEl = document.getElementById('message');
-    messageEl.textContent = message;
-    messageEl.className = `message ${type}`;
-    messageEl.style.display = 'block';
-    
-    // Auto-hide after 5 seconds
-    setTimeout(() => {
-        messageEl.style.display = 'none';
-    }, 5000);
+  const messageEl = document.getElementById("message");
+  if (!messageEl) return;
+
+  messageEl.textContent = message;
+  messageEl.className = `message ${type}`;
+  messageEl.style.display = "block";
+
+  // Auto-hide after 5 seconds
+  setTimeout(() => {
+    messageEl.style.display = "none";
+  }, 5000);
 }
 
-// Format currency
+
 function formatCurrency(value) {
-    if (!value || isNaN(value)) return 'N/A';
-    
-    const numValue = parseFloat(value);
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 2
-    }).format(numValue);
+  if (!value || isNaN(value)) return "N/A";
+  const numValue = parseFloat(value);
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+  }).format(numValue);
 }

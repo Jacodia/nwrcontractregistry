@@ -35,7 +35,7 @@ class Contract
 
     public function getAll()
     {
-        $sql = "SELECT contractid, parties, typeOfContract, duration, description, filepath, expiryDate, reviewByDate, contractValue 
+        $sql = "SELECT contractid, parties, typeOfContract, duration, description, filepath, expiryDate, reviewByDate, contractValue, manager_id 
                 FROM {$this->table}";
         $stmt = $this->pdo->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -49,7 +49,7 @@ class Contract
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function create($data)
+    public function create($data, $userid)
     {
         $fields = [];
         $placeholders = [];
@@ -69,6 +69,11 @@ class Contract
             $values[] = $data['filepath'];
         }
 
+        // Add manager_id
+        $fields[] = "manager_id";
+        $placeholders[] = "?";
+        $values[] = $userid;
+
         $sql = "INSERT INTO contracts (" . implode(", ", $fields) . ")
                 VALUES (" . implode(", ", $placeholders) . ")";
 
@@ -76,10 +81,12 @@ class Contract
         if ($stmt->execute($values)) {
             return $this->pdo->lastInsertId();
         }
+        error_log("Creating contract for user $userid with data: " . json_encode($data));
+
         return false;
     }
 
-    public function update($id, $data)
+    public function update($id, $data, $userid)
     {
         $fields = [];
         $values = [];
