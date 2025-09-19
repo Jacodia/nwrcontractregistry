@@ -60,18 +60,31 @@ class Contract
         $values = [];
 
         foreach (['parties','typeOfContract','duration','contractValue','description','expiryDate','reviewByDate'] as $col) {
-            if (isset($data[$col])) {
-                $fields[] = $col;
-                $placeholders[] = '?';
-                $values[] = $data[$col];
-            }
+        if (!empty($data[$col])) {
+            $fields[] = $col;
+            $placeholders[] = '?';
+            $values[] = $data[$col];
         }
+    }
 
-        if (!empty($data['filepath'])) {
+        // Add filepath if provided
+        if (isset($_FILES['contractFile']) && $_FILES['contractFile']['error'] === UPLOAD_ERR_OK) {
+    $uploadDir = __DIR__ . '/../uploads/';
+    if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+
+    $fileName = time() . "_" . basename($_FILES['contractFile']['name']);
+    $targetPath = $uploadDir . $fileName;
+
+    if (move_uploaded_file($_FILES['contractFile']['tmp_name'], $targetPath)) {
+        $data['filepath'] = 'uploads/' . $fileName; // save relative path
+    }
+}
+        if (isset($data['filepath'])) {
             $fields[] = "filepath";
             $placeholders[] = "?";
             $values[] = $data['filepath'];
         }
+
 
         // Add manager_id
         $fields[] = "manager_id";
@@ -79,9 +92,9 @@ class Contract
         $values[] = $userid;
 
         $sql = "INSERT INTO contracts (" . implode(", ", $fields) . ")
-                VALUES (" . implode(", ", $placeholders) . ")";
+            VALUES (" . implode(", ", $placeholders) . ")";
+    $stmt = $this->pdo->prepare($sql);
 
-        $stmt = $this->pdo->prepare($sql);
         if ($stmt->execute($values)) {
             return $this->pdo->lastInsertId();
         }
@@ -103,18 +116,17 @@ class Contract
 
         // File upload handling
         if (isset($_FILES['contractFile']) && $_FILES['contractFile']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = __DIR__ . '/../uploads/';
-            if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+    $uploadDir = __DIR__ . '/../uploads/';
+    $fileName = time() . "_" . basename($_FILES['contractFile']['name']);
+    $targetPath = $uploadDir . $fileName;
 
-            $partiesName = isset($data['parties']) ? preg_replace('/[\/\\\\:*?"<>|]/', '_', $data['parties']) : 'contract';
-            $extension = pathinfo($_FILES['contractFile']['name'], PATHINFO_EXTENSION);
-            $newFileName = $partiesName . "_" . time() . "." . $extension;
-            $fullPath = $uploadDir . $newFileName;
-
-            if (move_uploaded_file($_FILES['contractFile']['tmp_name'], $fullPath)) {
-                $fields[] = "filepath = ?";
-                $values[] = 'uploads/' . $newFileName;
-            }
+    if (move_uploaded_file($_FILES['contractFile']['tmp_name'], $targetPath)) {
+        $data['filepath'] = 'uploads/' . $fileName;
+    }
+}
+        if (isset($data['filepath'])) {
+            $fields[] = "filepath = ?";
+            $values[] = $data['filepath'];
         }
 
         if (empty($fields)) return false;
