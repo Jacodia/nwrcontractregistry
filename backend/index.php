@@ -6,11 +6,13 @@ require_once __DIR__ . "/config/db.php";
 require_once __DIR__ . "/config/auth.php";
 require_once __DIR__ . "/controllers/ContractController.php";
 require_once __DIR__ . "/controllers/UserController.php";
+require_once __DIR__ . "/controllers/ContractTypeController.php";
 
 Auth::init($pdo);
 
 $controller = new ContractController($pdo);
 $userController = new UserController($pdo);
+$contractTypeController = new ContractTypeController($pdo);
 
 // Function to handle file upload
 function handleFileUpload($file, $partiesName)

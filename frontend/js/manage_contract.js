@@ -88,18 +88,7 @@ async function logout() {
   }
 }
 
-// ===============================
-// Initialize Page (after DOM load)
-// ===============================
-document.addEventListener("DOMContentLoaded", async function () {
-  const hasAccess = await checkAuth();
-  if (hasAccess) {
-    initializeTabs();
-    loadContracts();
-    setupFormHandlers();
-    loadContractTypes();
-  }
-});
+
 
 // ===============================
 // Tabs Handling
@@ -515,17 +504,56 @@ async function loadContractTypes() {
   });
 }
 
+// Show "Add Type" input + save button only for admins
+function showAddTypeDialogForAdmins() {
+  if (currentUser && currentUser.role === "admin") {
+    const dialog = document.getElementById('add-type-dialog');
+    if (dialog) {
+      dialog.style.display = 'block'; // show for admins
+      console.log("✅ Admin detected, showing Add Type dialog");
+    }
+  } else {
+    console.log("❌ Not admin or currentUser missing, dialog stays hidden");
+  }
+}
+
 async function saveType() {
-  const name = document.getElementById('new-type-name').value;
-  const userId = currentUser?.userid; 
+  const name = document.getElementById('new-type-name').value.trim();
+  const userId = currentUser?.userid;
+
+  if (!name) {
+    showMessage("Please enter a contract type name.", "error");
+    return;
+  }
+
   const res = await fetch('/nwrcontractregistry/backend/index.php?action=add_type', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, userId })
   });
+
   const result = await res.json();
+
   if (result.success) {
     loadContractTypes();
-    document.getElementById('add-type-dialog').style.display = 'none';
+    document.getElementById('new-type-name').value = ''; // clear field
+    showMessage("Contract type added successfully.", "success");
+  } else {
+    showMessage(result.message || "Failed to add contract type.", "error");
   }
 }
+
+// ===============================
+// Initialize Page (after DOM load)
+// ===============================
+document.addEventListener("DOMContentLoaded", async function () {
+  const hasAccess = await checkAuth();
+  if (hasAccess) {
+    initializeTabs();
+    loadContracts();
+    setupFormHandlers();
+    loadContractTypes();
+    showAddTypeDialogForAdmins();
+
+  }
+});
