@@ -136,19 +136,19 @@ try {
             Auth::requireRole('admin'); // Only admins can change user roles
             $userId = $_POST['user_id'] ?? null;
             $newRole = $_POST['role'] ?? null;
-            
+
             if (!$userId || !$newRole) {
                 http_response_code(400);
                 echo json_encode(["error" => "User ID and role required"]);
                 break;
             }
-            
+
             if (!in_array($newRole, ['user', 'manager', 'admin'])) {
                 http_response_code(400);
                 echo json_encode(["error" => "Invalid role"]);
                 break;
             }
-            
+
             if ($userController->updateUserRole($userId, $newRole)) {
                 echo json_encode(["message" => "User role updated successfully"]);
             } else {
@@ -160,20 +160,20 @@ try {
         case 'delete_user':
             Auth::requireRole('admin'); // Only admins can delete users
             $userId = $_POST['user_id'] ?? null;
-            
+
             if (!$userId) {
                 http_response_code(400);
                 echo json_encode(["error" => "User ID required"]);
                 break;
             }
-            
+
             // Prevent admin from deleting themselves
             if ($userId == $_SESSION['user_id']) {
                 http_response_code(400);
                 echo json_encode(["error" => "Cannot delete your own account"]);
                 break;
             }
-            
+
             if ($userController->deleteUser($userId)) {
                 echo json_encode(["message" => "User deleted successfully"]);
             } else {
@@ -187,6 +187,19 @@ try {
             echo json_encode($userController->getUserStats());
             break;
 
+        // --------------------Contract Type Management--------------------
+        case 'list_types':
+            $controller = new ContractTypeController($pdo);
+            echo json_encode($controller->getAll());
+            break;
+
+        case 'add_type':
+            $controller = new ContractTypeController($pdo);
+            $data = json_decode(file_get_contents("php://input"), true);
+            echo json_encode($controller->create($data['name'], $data['userId']));
+            break;
+
+
         default:
             http_response_code(400);
             echo json_encode(["error" => "Invalid action"]);
@@ -195,4 +208,3 @@ try {
     http_response_code(500);
     echo json_encode(["error" => $e->getMessage()]);
 }
-?>

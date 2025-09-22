@@ -49,6 +49,24 @@ VALUES
 ('NWR // Microsoft', 'Volume licensing', '36 months', NULL, '2026-03-31', NULL, NULL, 2),
 ('NWR // BCX', 'Offsite backup of data', '12 months', NULL, '2026-08-01', NULL, NULL, 2);
 
+CREATE TABLE contract_types (
+  typeid INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(150) NOT NULL UNIQUE,
+  created_by INT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (created_by) REFERENCES users(userid) ON DELETE SET NULL
+);
+
+
+INSERT INTO contractTypes (name, createdBy)
+VALUES
+('Service Agreement', NULL),
+('Supply Agreement', NULL),
+('Employment Contract', NULL),
+('Lease Agreement', NULL),
+('Partnership Agreement', NULL),
+('Other', NULL);
+
 
 Cardinality Summary
 

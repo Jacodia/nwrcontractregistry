@@ -97,6 +97,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     initializeTabs();
     loadContracts();
     setupFormHandlers();
+    loadContractTypes();
   }
 });
 
@@ -492,4 +493,39 @@ function formatCurrency(value) {
     currency: "USD",
     minimumFractionDigits: 2,
   }).format(numValue);
+}
+
+// ===============================
+// Contract Types Handling
+// ===============================
+async function loadContractTypes() {
+  const res = await fetch('/nwrcontractregistry/backend/index.php?action=list_types');
+  const types = await res.json();
+
+  const selects = [document.getElementById('typeOfContract'), document.getElementById('edit-typeOfContract')];
+  selects.forEach(sel => {
+    if (!sel) return;
+    sel.innerHTML = '<option value="">Select contract type</option>';
+    types.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.name;
+      opt.textContent = t.name;
+      sel.appendChild(opt);
+    });
+  });
+}
+
+async function saveType() {
+  const name = document.getElementById('new-type-name').value;
+  const userId = currentUser?.userid; 
+  const res = await fetch('/nwrcontractregistry/backend/index.php?action=add_type', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, userId })
+  });
+  const result = await res.json();
+  if (result.success) {
+    loadContractTypes();
+    document.getElementById('add-type-dialog').style.display = 'none';
+  }
 }
