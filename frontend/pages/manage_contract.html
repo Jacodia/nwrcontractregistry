@@ -162,6 +162,70 @@
                     <button type="submit" class="btn btn-primary">Create Contract</button>
                     <button type="reset" class="btn btn-warning">Reset Form</button>
                 </div>
+
+
+
+
+
+               
+<!-- Notification toggle -->
+<div class="notification-toggle">
+  <label class="toggle-label">
+    <input type="checkbox" id="notifyToggle" checked>
+    Receive Email Notifications
+  </label>
+</div>
+
+
+<script>
+document.getElementById('notifyToggle').addEventListener('change', function() {
+    const enabled = this.checked ? 1 : 0;
+    const userid = 2; // Replace with the logged-in manager’s ID dynamically
+
+    fetch('backend/toggle_notifications.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'userid=' + userid + '&enabled=' + enabled
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert('Notification setting updated!');
+        } else {
+            alert('Error: ' + data.message);
+        }
+    });
+});
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             </form>
         </div>
 

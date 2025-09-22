@@ -78,3 +78,64 @@
     border-bottom: 2px solid #007bff;
 }
 
+
+/* Container styling for email notification */
+.notification-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; 
+    padding-right: 1rem;
+    margin-left: auto;
+}
+
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #333;
+    cursor: pointer;
+}
+
+
+.toggle-label input[type="checkbox"] {
+    appearance: none;
+    width: 40px;
+    height: 20px;
+    background-color: #ccc;
+    border-radius: 20px;
+    position: relative;
+    outline: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+
+.toggle-label input[type="checkbox"]::before {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 2px;
+    left: 2px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+}
+
+
+.toggle-label input[type="checkbox"]:checked {
+    background-color: #007bff; 
+}
+
+.toggle-label input[type="checkbox"]:checked::before {
+    transform: translateX(20px);
+}
+
+
+.toggle-label:hover {
+    color: #007bff;
+}
+

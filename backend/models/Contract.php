@@ -154,29 +154,31 @@ class Contract
         $this->checkAndSend(30, 'daily');   // 1 month
     }
 
-    private function checkAndSend($days, $frequency)
-    {
-        if (!$this->shouldSend($frequency)) return;
+   
+       private function checkAndSend($days, $frequency)
+{
+    if (!$this->shouldSend($frequency)) return;
 
-        $sql = "SELECT c.*, u.email AS manager_email
-                FROM {$this->table} c
-                INNER JOIN users u ON c.manager_id = u.userid
-                WHERE c.expiryDate BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL :days DAY)";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute(['days' => $days]);
-        $contracts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $sql = "SELECT c.*, u.email AS manager_email, u.receive_notifications
+            FROM {$this->table} c
+            INNER JOIN users u ON c.manager_id = u.userid
+            WHERE u.receive_notifications = 1
+              AND c.expiryDate BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL :days DAY)";
+    $stmt = $this->pdo->prepare($sql);
+    $stmt->execute(['days' => $days]);
+    $contracts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        foreach ($contracts as $contract) {
-            $recipientEmail = $contract['manager_email'];
-            if (filter_var($recipientEmail, FILTER_VALIDATE_EMAIL)) {
-                $this->sendEmailNotification(
-                    $recipientEmail,
-                    $contract['typeOfContract'],
-                    $contract['expiryDate']
-                );
-            }
+    foreach ($contracts as $contract) {
+        $recipientEmail = $contract['manager_email'];
+        if (filter_var($recipientEmail, FILTER_VALIDATE_EMAIL)) {
+            $this->sendEmailNotification(
+                $recipientEmail,
+                $contract['typeOfContract'],
+                $contract['expiryDate']
+            );
         }
     }
+}
 
     private function shouldSend($frequency)
     {
