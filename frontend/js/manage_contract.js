@@ -509,11 +509,9 @@ function showAddTypeDialogForAdmins() {
   if (currentUser && currentUser.role === "admin") {
     const dialog = document.getElementById('add-type-dialog');
     if (dialog) {
-      dialog.style.display = 'block'; // show for admins
-      console.log("✅ Admin detected, showing Add Type dialog");
+      dialog.style.display = 'block'; // show dialog
     }
-  } else {
-    console.log("❌ Not admin or currentUser missing, dialog stays hidden");
+    
   }
 }
 

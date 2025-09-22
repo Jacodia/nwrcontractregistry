@@ -175,7 +175,7 @@
                         <td>
                             <select class="role-select" onchange="changeUserRole(${user.userid}, this.value)" 
                                     ${user.userid == currentUser.id ? 'disabled' : ''}>
-                                <option value="user" ${user.role === 'user' ? 'selected' : ''}>User</option>
+                                <option value="viewer" ${user.role === 'viewer' ? 'selected' : ''}>Viewer</option>
                                 <option value="manager" ${user.role === 'manager' ? 'selected' : ''}>Manager</option>
                                 <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
                             </select>
