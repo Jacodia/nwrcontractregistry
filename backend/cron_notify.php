@@ -5,7 +5,7 @@ date_default_timezone_set('Africa/Windhoek');
 // Include the notifier class
 require_once 'ContractNotifier.php';
 
-// Create instance
+// Create instance of ContractNotifier
 $notifier = new ContractNotifier();
 
 // Define your notification schedule

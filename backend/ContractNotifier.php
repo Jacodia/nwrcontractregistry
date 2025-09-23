@@ -2,15 +2,15 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-// Require Composer autoload or PHPMailer files
-require 'vendor/autoload.php'; // Make sure you installed PHPMailer via Composer
+// Require Composer autoload
+require 'vendor/autoload.php';
 
 class ContractNotifier {
 
     private $pdo;
 
     public function __construct() {
-        // Database connection (update credentials)
+        // Database connection
         $host = 'localhost';
         $db   = 'nwr_crdb';
         $user = 'root';
@@ -38,20 +38,23 @@ class ContractNotifier {
 
         // Fetch contracts expiring in $days
         $stmt = $this->pdo->prepare("
-            SELECT c.contract_name, c.expiry_date, u.email AS manager_email
+            SELECT c.parties, c.expiryDate, u.email AS manager_email
             FROM contracts c
             INNER JOIN users u ON c.manager_id = u.userid
-            WHERE DATEDIFF(c.expiry_date, :today) = :days
+            WHERE DATEDIFF(c.expiryDate, :today) = :days
               AND u.receive_notifications = 1
         ");
-        $stmt->execute(['today' => $today->format('Y-m-d'), 'days' => $days]);
+        $stmt->execute([
+            'today' => $today->format('Y-m-d'), 
+            'days' => $days
+        ]);
         $contracts = $stmt->fetchAll();
 
         foreach ($contracts as $contract) {
             $this->sendEmail(
                 $contract['manager_email'],
                 "Contract Expiry Notification",
-                "The contract '{$contract['contract_name']}' will expire on {$contract['expiry_date']}."
+                "The contract '{$contract['parties']}' will expire on {$contract['expiryDate']}."
             );
         }
     }
@@ -60,7 +63,7 @@ class ContractNotifier {
         $weekday = $today->format('N'); // 1=Monday, 7=Sunday
         switch ($frequency) {
             case 'daily':
-                return true; // PHPMailer sends whenever the cron runs
+                return true;
             case 'weekly':
                 return $weekday == 1; // Monday
             case 'twice':
@@ -74,20 +77,20 @@ class ContractNotifier {
         $mail = new PHPMailer(true);
 
         try {
-            // SMTP settings
+            // Gmail SMTP settings
             $mail->isSMTP();
-            $mail->Host       = 'smtp.example.com'; // Replace with your SMTP host
+            $mail->Host       = 'smtp.gmail.com';
             $mail->SMTPAuth   = true;
-            $mail->Username   = 'your_email@example.com'; // SMTP username
-            $mail->Password   = 'lkmkivxthjizqojc';         // SMTP password
+            $mail->Username   = 'uraniathomas23@gmail.com'; // your Gmail
+            $mail->Password   = 'lkmkivxthjizqojc';   // Gmail App Password
             $mail->SMTPSecure = 'tls';
             $mail->Port       = 587;
 
             // Recipients
-            $mail->setFrom('no-reply@nwr.com', 'NWR Contracts');
+            $mail->setFrom('uraniathomas23@gmail.com', 'NWR Contracts');
             $mail->addAddress($to);
 
-            // Content
+            // Email content
             $mail->isHTML(false);
             $mail->Subject = $subject;
             $mail->Body    = $message;
