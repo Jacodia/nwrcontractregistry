@@ -7,7 +7,7 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-// Include PHPMailer files
+// Include PHPMailer files (adjust path if needed)
 require __DIR__ . '/../PHPMailer/PHPMailer.php';
 require __DIR__ . '/../PHPMailer/SMTP.php';
 require __DIR__ . '/../PHPMailer/Exception.php';
@@ -25,9 +25,10 @@ class Contract
     // --------------------
     // CRUD Methods
     // --------------------
+
+    // ✅ Only one getAllContracts() — includes manager_email and manager_name
     public function getAllContracts()
     {
-        // Updated to fetch manager email
         $sql = "SELECT c.*, u.email AS manager_email, u.username AS manager_name
                 FROM {$this->table} c
                 INNER JOIN users u ON c.manager_id = u.userid
@@ -60,40 +61,39 @@ class Contract
         $values = [];
 
         foreach (['parties','typeOfContract','duration','contractValue','description','expiryDate','reviewByDate'] as $col) {
-        if (!empty($data[$col])) {
-            $fields[] = $col;
-            $placeholders[] = '?';
-            $values[] = $data[$col];
+            if (!empty($data[$col])) {
+                $fields[] = $col;
+                $placeholders[] = '?';
+                $values[] = $data[$col];
+            }
         }
-    }
 
-        // Add filepath if provided
+        // Handle file upload
         if (isset($_FILES['contractFile']) && $_FILES['contractFile']['error'] === UPLOAD_ERR_OK) {
-    $uploadDir = __DIR__ . '/../uploads/';
-    if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+            $uploadDir = __DIR__ . '/../uploads/';
+            if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
 
-    $fileName = time() . "_" . basename($_FILES['contractFile']['name']);
-    $targetPath = $uploadDir . $fileName;
+            $fileName = time() . "_" . basename($_FILES['contractFile']['name']);
+            $targetPath = $uploadDir . $fileName;
 
-    if (move_uploaded_file($_FILES['contractFile']['tmp_name'], $targetPath)) {
-        $data['filepath'] = 'uploads/' . $fileName; // save relative path
-    }
-}
+            if (move_uploaded_file($_FILES['contractFile']['tmp_name'], $targetPath)) {
+                $data['filepath'] = 'uploads/' . $fileName; // save relative path
+            }
+        }
         if (isset($data['filepath'])) {
             $fields[] = "filepath";
             $placeholders[] = "?";
             $values[] = $data['filepath'];
         }
 
-
         // Add manager_id
         $fields[] = "manager_id";
         $placeholders[] = "?";
         $values[] = $userid;
 
-        $sql = "INSERT INTO contracts (" . implode(", ", $fields) . ")
-            VALUES (" . implode(", ", $placeholders) . ")";
-    $stmt = $this->pdo->prepare($sql);
+        $sql = "INSERT INTO {$this->table} (" . implode(", ", $fields) . ")
+                VALUES (" . implode(", ", $placeholders) . ")";
+        $stmt = $this->pdo->prepare($sql);
 
         if ($stmt->execute($values)) {
             return $this->pdo->lastInsertId();
@@ -114,16 +114,18 @@ class Contract
             }
         }
 
-        // File upload handling
+        // Handle file upload
         if (isset($_FILES['contractFile']) && $_FILES['contractFile']['error'] === UPLOAD_ERR_OK) {
-    $uploadDir = __DIR__ . '/../uploads/';
-    $fileName = time() . "_" . basename($_FILES['contractFile']['name']);
-    $targetPath = $uploadDir . $fileName;
+            $uploadDir = __DIR__ . '/../uploads/';
+            if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
 
-    if (move_uploaded_file($_FILES['contractFile']['tmp_name'], $targetPath)) {
-        $data['filepath'] = 'uploads/' . $fileName;
-    }
-}
+            $fileName = time() . "_" . basename($_FILES['contractFile']['name']);
+            $targetPath = $uploadDir . $fileName;
+
+            if (move_uploaded_file($_FILES['contractFile']['tmp_name'], $targetPath)) {
+                $data['filepath'] = 'uploads/' . $fileName;
+            }
+        }
         if (isset($data['filepath'])) {
             $fields[] = "filepath = ?";
             $values[] = $data['filepath'];
@@ -132,7 +134,7 @@ class Contract
         if (empty($fields)) return false;
 
         $values[] = $id;
-        $sql = "UPDATE contracts SET " . implode(", ", $fields) . " WHERE contractid = ?";
+        $sql = "UPDATE {$this->table} SET " . implode(", ", $fields) . " WHERE contractid = ?";
         $stmt = $this->pdo->prepare($sql);
         return $stmt->execute($values);
     }
@@ -144,9 +146,9 @@ class Contract
         return $stmt->execute(['id' => $id]);
     }
 
-    // --------------------
+    // ------------------------------------------------
     // Email Notification Methods
-    // --------------------
+    // ------------------------------------------------
     public function sendExpiryNotifications()
     {
         $this->checkAndSend(90, 'weekly');  // 3 months
@@ -154,31 +156,30 @@ class Contract
         $this->checkAndSend(30, 'daily');   // 1 month
     }
 
-   
-       private function checkAndSend($days, $frequency)
-{
-    if (!$this->shouldSend($frequency)) return;
+    private function checkAndSend($days, $frequency)
+    {
+        if (!$this->shouldSend($frequency)) return;
 
-    $sql = "SELECT c.*, u.email AS manager_email, u.receive_notifications
-            FROM {$this->table} c
-            INNER JOIN users u ON c.manager_id = u.userid
-            WHERE u.receive_notifications = 1
-              AND c.expiryDate BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL :days DAY)";
-    $stmt = $this->pdo->prepare($sql);
-    $stmt->execute(['days' => $days]);
-    $contracts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $sql = "SELECT c.*, u.email AS manager_email, u.receive_notifications
+                FROM {$this->table} c
+                INNER JOIN users u ON c.manager_id = u.userid
+                WHERE u.receive_notifications = 1
+                AND c.expiryDate BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL :days DAY)";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['days' => $days]);
+        $contracts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    foreach ($contracts as $contract) {
-        $recipientEmail = $contract['manager_email'];
-        if (filter_var($recipientEmail, FILTER_VALIDATE_EMAIL)) {
-            $this->sendEmailNotification(
-                $recipientEmail,
-                $contract['typeOfContract'],
-                $contract['expiryDate']
-            );
+        foreach ($contracts as $contract) {
+            $recipientEmail = $contract['manager_email'];
+            if (filter_var($recipientEmail, FILTER_VALIDATE_EMAIL)) {
+                $this->sendEmailNotification(
+                    $recipientEmail,
+                    $contract['typeOfContract'],
+                    $contract['expiryDate']
+                );
+            }
         }
     }
-}
 
     private function shouldSend($frequency)
     {
@@ -189,7 +190,9 @@ class Contract
         return false;
     }
 
-    // Public so it can be tested directly
+    // ------------------------------------------------
+    // Send Email
+    // ------------------------------------------------
     public function sendEmailNotification($recipientEmail, $contractType, $expiryDate)
     {
         $mail = new PHPMailer(true);
@@ -213,7 +216,7 @@ class Contract
 
             $mail->isHTML(false);
             $mail->Subject = 'Contract Expiry Notification';
-            $mail->Body    = "Hello,\n\nThe contract of '{$contractType}' is set to expire on {$expiryDate}.\nPlease take necessary action before it expires.\n\nThank you. \n\nContract Registry System";
+            $mail->Body    = "Hello,\n\nThe contract of '{$contractType}' is set to expire on {$expiryDate}.\nPlease take necessary action before it expires.\n\nThank you.\nContract Registry System";
 
             $mail->send();
             return true;
