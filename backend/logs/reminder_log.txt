@@ -4,3 +4,118 @@
 2025-09-18 15:52:51 - Sent reminder to raybicycle@gmail.com (expires in 19 days)
 2025-09-18 15:57:56 - Sent reminder to raybicycle@gmail.com (expires in 19 days)
 2025-09-18 16:02:47 - Failed to send reminder to raybicycle@gmail.com: SMTP Error: Could not connect to SMTP host. Failed to connect to server SMTP server error: Failed to connect to server Additional SMTP info: php_network_getaddresses: getaddrinfo for smtp.gmail.com failed: No such host is known. 
+2025-09-24 16:18:19 - Sent reminder to raybicycle@gmail.com (expires in 4 days)
+2025-09-24 16:18:26 - Sent reminder to admin@example.com (expires in 4 days)
+2025-09-24 16:18:32 - Sent reminder to raybicycle@gmail.com (expires in 13 days)
+2025-09-25 06:56:31 - Database connection established successfully
+2025-09-25 06:56:31 - Starting check for contracts expiring in 1-30 days (Category: 30, Frequency: daily)
+2025-09-25 06:56:31 - Proceeding with notifications for contracts expiring in 1-30 days
+2025-09-25 06:56:31 - Executing database query for contracts expiring in 1-30 days
+2025-09-25 06:56:31 - Found 5 contracts expiring in 1-30 days
+2025-09-25 06:56:31 - Processing contract: 'das' (expires in 4 days) - Manager: uraniathomas23@gmail.com
+2025-09-25 06:56:31 - Attempting to send email to: uraniathomas23@gmail.com
+2025-09-25 06:56:37 - ✅ Email sent successfully to: uraniathomas23@gmail.com
+2025-09-25 06:56:38 - Processing contract: 'Range Test 30A - 5 days' (expires in 4 days) - Manager: uraniathomas23@gmail.com
+2025-09-25 06:56:38 - Attempting to send email to: uraniathomas23@gmail.com
+2025-09-25 06:56:44 - ✅ Email sent successfully to: uraniathomas23@gmail.com
+2025-09-25 06:56:45 - Processing contract: 'NWR // CIMSO' (expires in 4 days) - Manager: raybicycle@gmail.com
+2025-09-25 06:56:45 - Attempting to send email to: raybicycle@gmail.com
+2025-09-25 06:57:04 - Database connection established successfully
+2025-09-25 06:57:04 - Starting check for contracts expiring in 31-60 days (Category: 60, Frequency: twice)
+2025-09-25 06:57:04 - Proceeding with notifications for contracts expiring in 31-60 days
+2025-09-25 06:57:04 - Executing database query for contracts expiring in 31-60 days
+2025-09-25 06:57:04 - Found 6 contracts expiring in 31-60 days
+2025-09-25 06:57:04 - Processing contract: 'Test Contract 30 Days' (expires in 33 days) - Manager: raybicycle@gmail.com
+2025-09-25 06:57:04 - Attempting to send email to: raybicycle@gmail.com
+2025-09-25 06:57:12 - ✅ Email sent successfully to: raybicycle@gmail.com
+2025-09-25 06:57:13 - Processing contract: 'Range Test 60A - 35 days' (expires in 34 days) - Manager: uraniathomas23@gmail.com
+2025-09-25 06:57:13 - Attempting to send email to: uraniathomas23@gmail.com
+2025-09-25 06:57:19 - ✅ Email sent successfully to: uraniathomas23@gmail.com
+2025-09-25 06:57:20 - Processing contract: 'NWR // NBC' (expires in 40 days) - Manager: raybicycle@gmail.com
+2025-09-25 06:57:20 - Attempting to send email to: raybicycle@gmail.com
+2025-09-25 06:57:26 - ✅ Email sent successfully to: raybicycle@gmail.com
+2025-09-25 06:57:27 - Processing contract: 'NWR // FNB' (expires in 41 days) - Manager: raybicycle@gmail.com
+2025-09-25 06:57:27 - Attempting to send email to: raybicycle@gmail.com
+2025-09-25 06:57:32 - ✅ Email sent successfully to: raybicycle@gmail.com
+2025-09-25 06:57:33 - Processing contract: 'Range Test 60B - 45 days' (expires in 44 days) - Manager: raybicycle@gmail.com
+2025-09-25 06:57:33 - Attempting to send email to: raybicycle@gmail.com
+2025-09-25 06:57:40 - ✅ Email sent successfully to: raybicycle@gmail.com
+2025-09-25 06:57:41 - Processing contract: 'Test Contract 60 Days' (expires in 59 days) - Manager: uraniathomas23@gmail.com
+2025-09-25 06:57:41 - Attempting to send email to: uraniathomas23@gmail.com
+2025-09-25 06:57:47 - ✅ Email sent successfully to: uraniathomas23@gmail.com
+2025-09-25 06:57:48 - Completed processing 6 contracts for category 60
+2025-09-25 06:58:12 - Database connection established successfully
+2025-09-25 06:58:12 - Starting check for contracts expiring in 61-90 days (Category: 90, Frequency: weekly)
+2025-09-25 06:58:12 - Skipping notifications today - frequency 'weekly' not scheduled for Thursday (4)
+2025-09-25 09:04:39 - Database connection established successfully
+2025-09-25 09:04:39 - Starting check for contracts expiring in 31-60 days (Category: 60, Frequency: twice)
+2025-09-25 09:04:39 - Proceeding with notifications for contracts expiring in 31-60 days
+2025-09-25 09:04:39 - Executing database query for contracts expiring in 31-60 days
+2025-09-25 09:04:39 - Found 6 contracts expiring in 31-60 days
+2025-09-25 09:04:39 - Processing contract: 'Test Contract 30 Days' (expires in 33 days) - Manager: raybicycle@gmail.com
+2025-09-25 09:04:39 - Attempting to send email to: raybicycle@gmail.com
+2025-09-25 09:04:44 - ✅ Email sent successfully to: raybicycle@gmail.com
+2025-09-25 09:04:45 - Processing contract: 'Range Test 60A - 35 days' (expires in 34 days) - Manager: uraniathomas23@gmail.com
+2025-09-25 09:04:45 - Attempting to send email to: uraniathomas23@gmail.com
+2025-09-25 09:04:50 - ✅ Email sent successfully to: uraniathomas23@gmail.com
+2025-09-25 09:04:51 - Processing contract: 'NWR // NBC' (expires in 40 days) - Manager: raybicycle@gmail.com
+2025-09-25 09:04:51 - Attempting to send email to: raybicycle@gmail.com
+2025-09-25 09:04:56 - ✅ Email sent successfully to: raybicycle@gmail.com
+2025-09-25 09:04:57 - Processing contract: 'NWR // FNB' (expires in 41 days) - Manager: raybicycle@gmail.com
+2025-09-25 09:04:57 - Attempting to send email to: raybicycle@gmail.com
+2025-09-25 09:05:02 - ✅ Email sent successfully to: raybicycle@gmail.com
+2025-09-25 09:05:03 - Processing contract: 'Range Test 60B - 45 days' (expires in 44 days) - Manager: raybicycle@gmail.com
+2025-09-25 09:05:03 - Attempting to send email to: raybicycle@gmail.com
+2025-09-25 09:05:08 - ✅ Email sent successfully to: raybicycle@gmail.com
+2025-09-25 09:05:09 - Processing contract: 'Test Contract 60 Days' (expires in 59 days) - Manager: uraniathomas23@gmail.com
+2025-09-25 09:05:09 - Attempting to send email to: uraniathomas23@gmail.com
+2025-09-25 09:05:15 - ✅ Email sent successfully to: uraniathomas23@gmail.com
+2025-09-25 09:05:16 - Completed processing 6 contracts for category 60
+2025-09-25 09:09:32 - Database connection established successfully
+2025-09-25 09:09:32 - Starting check for contracts expiring in 31-60 days (Category: 60, Frequency: twice)
+2025-09-25 09:09:32 - Proceeding with notifications for contracts expiring in 31-60 days
+2025-09-25 09:09:32 - Executing database query for contracts expiring in 31-60 days
+2025-09-25 09:09:32 - Found 6 contracts expiring in 31-60 days
+2025-09-25 09:09:32 - Processing contract: 'Test Contract 30 Days' (expires in 33 days) - Manager: raybicycle@gmail.com
+2025-09-25 09:09:32 - Attempting to send email to: raybicycle@gmail.com
+2025-09-25 09:09:36 - ✅ Email sent successfully to: raybicycle@gmail.com
+2025-09-25 09:09:37 - Processing contract: 'Range Test 60A - 35 days' (expires in 34 days) - Manager: uraniathomas23@gmail.com
+2025-09-25 09:09:37 - Attempting to send email to: uraniathomas23@gmail.com
+2025-09-25 09:09:43 - ✅ Email sent successfully to: uraniathomas23@gmail.com
+2025-09-25 09:09:44 - Processing contract: 'NWR // NBC' (expires in 40 days) - Manager: raybicycle@gmail.com
+2025-09-25 09:09:44 - Attempting to send email to: raybicycle@gmail.com
+2025-09-25 09:09:49 - ✅ Email sent successfully to: raybicycle@gmail.com
+2025-09-25 09:09:50 - Processing contract: 'NWR // FNB' (expires in 41 days) - Manager: raybicycle@gmail.com
+2025-09-25 09:09:50 - Attempting to send email to: raybicycle@gmail.com
+2025-09-25 09:09:55 - ✅ Email sent successfully to: raybicycle@gmail.com
+2025-09-25 09:09:56 - Processing contract: 'Range Test 60B - 45 days' (expires in 44 days) - Manager: raybicycle@gmail.com
+2025-09-25 09:09:56 - Attempting to send email to: raybicycle@gmail.com
+2025-09-25 09:10:00 - ✅ Email sent successfully to: raybicycle@gmail.com
+2025-09-25 09:10:01 - Processing contract: 'Test Contract 60 Days' (expires in 59 days) - Manager: uraniathomas23@gmail.com
+2025-09-25 09:10:01 - Attempting to send email to: uraniathomas23@gmail.com
+2025-09-25 09:10:06 - ✅ Email sent successfully to: uraniathomas23@gmail.com
+2025-09-25 09:10:07 - Completed processing 6 contracts for category 60
+2025-09-25 09:11:03 - Database connection established successfully
+2025-09-25 09:11:03 - Starting check for contracts expiring in 31-60 days (Category: 60, Frequency: twice)
+2025-09-25 09:11:03 - Proceeding with notifications for contracts expiring in 31-60 days
+2025-09-25 09:11:03 - Executing database query for contracts expiring in 31-60 days
+2025-09-25 09:11:03 - Found 6 contracts expiring in 31-60 days
+2025-09-25 09:11:03 - Processing contract: 'Test Contract 30 Days' (expires in 33 days) - Manager: raybicycle@gmail.com
+2025-09-25 09:11:03 - Attempting to send email to: raybicycle@gmail.com
+2025-09-25 09:11:08 - ✅ Email sent successfully to: raybicycle@gmail.com
+2025-09-25 09:11:09 - Processing contract: 'Range Test 60A - 35 days' (expires in 34 days) - Manager: uraniathomas23@gmail.com
+2025-09-25 09:11:09 - Attempting to send email to: uraniathomas23@gmail.com
+2025-09-25 09:11:14 - ✅ Email sent successfully to: uraniathomas23@gmail.com
+2025-09-25 09:11:15 - Processing contract: 'NWR // NBC' (expires in 40 days) - Manager: raybicycle@gmail.com
+2025-09-25 09:11:15 - Attempting to send email to: raybicycle@gmail.com
+2025-09-25 09:11:20 - ✅ Email sent successfully to: raybicycle@gmail.com
+2025-09-25 09:11:21 - Processing contract: 'NWR // FNB' (expires in 41 days) - Manager: raybicycle@gmail.com
+2025-09-25 09:11:21 - Attempting to send email to: raybicycle@gmail.com
+2025-09-25 09:11:27 - ✅ Email sent successfully to: raybicycle@gmail.com
+2025-09-25 09:11:28 - Processing contract: 'Range Test 60B - 45 days' (expires in 44 days) - Manager: raybicycle@gmail.com
+2025-09-25 09:11:28 - Attempting to send email to: raybicycle@gmail.com
+2025-09-25 09:11:37 - ✅ Email sent successfully to: raybicycle@gmail.com
+2025-09-25 09:11:38 - Processing contract: 'Test Contract 60 Days' (expires in 59 days) - Manager: uraniathomas23@gmail.com
+2025-09-25 09:11:38 - Attempting to send email to: uraniathomas23@gmail.com
+2025-09-25 09:11:43 - ✅ Email sent successfully to: uraniathomas23@gmail.com
+2025-09-25 09:11:44 - Completed processing 6 contracts for category 60

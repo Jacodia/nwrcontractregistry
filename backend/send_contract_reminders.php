@@ -1,9 +1,7 @@
 <?php
 require_once __DIR__ . "/config/db.php";
 // Add PHPMailer
-require_once __DIR__ . "/../vendor/PHPMailer/src/PHPMailer.php";
-require_once __DIR__ . "/../vendor/PHPMailer/src/SMTP.php";
-require_once __DIR__ . "/../vendor/PHPMailer/src/Exception.php";
+require_once __DIR__ . '/../vendor/autoload.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;

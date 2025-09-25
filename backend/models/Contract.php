@@ -7,10 +7,8 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-// Include PHPMailer files (adjust path if needed)
-require __DIR__ . '/../PHPMailer/PHPMailer.php';
-require __DIR__ . '/../PHPMailer/SMTP.php';
-require __DIR__ . '/../PHPMailer/Exception.php';
+// Require Composer autoload for PHPMailer
+require_once __DIR__ . '/../../vendor/autoload.php';
 
 class Contract
 {

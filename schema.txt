@@ -29,6 +29,7 @@ CREATE TABLE `contracts` (
   `reviewByDate` DATE NULL,
   `contractValue` DECIMAL(15,2) NULL,
   `filepath` VARCHAR(255) NULL,
+  `notify_manager` TINYINT(10) NOT NULL DEFAULT 1,
   `manager_id` INT(10) NOT NULL, -- Foreign key referencing the manager
   PRIMARY KEY (`contractid`),
   FOREIGN KEY (`manager_id`) REFERENCES `users`(`userid`) ON DELETE CASCADE
