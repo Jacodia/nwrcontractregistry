@@ -8,6 +8,8 @@ require_once '../vendor/phpmailer/phpmailer/src/Exception.php';
 require_once '../vendor/phpmailer/phpmailer/src/PHPMailer.php';
 require_once '../vendor/phpmailer/phpmailer/src/SMTP.php';
 
+date_default_timezone_set("Africa/Windhoek"); // adjust for timezone
+
 class ContractNotifier {
 
     private $pdo;
@@ -24,7 +26,7 @@ class ContractNotifier {
             $this->logMessage("Created logs directory: $logDir");
         }
 
-        // Optional: Log rotation to prevent huge files
+        // Log rotation to prevent huge files
         if (file_exists($this->logFile) && filesize($this->logFile) > 10 * 1024 * 1024) { // 10MB limit
             rename($this->logFile, $logDir . '/reminder_log_' . date('YmdHis') . '.txt');
             $this->logMessage("Rotated log file");

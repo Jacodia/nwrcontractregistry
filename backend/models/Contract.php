@@ -58,30 +58,12 @@ class Contract
         $placeholders = [];
         $values = [];
 
-        foreach (['parties','typeOfContract','duration','contractValue','description','expiryDate','reviewByDate'] as $col) {
+        foreach (['parties','typeOfContract','duration','contractValue','description','expiryDate','reviewByDate','filepath'] as $col) {
             if (!empty($data[$col])) {
                 $fields[] = $col;
                 $placeholders[] = '?';
                 $values[] = $data[$col];
             }
-        }
-
-        // Handle file upload
-        if (isset($_FILES['contractFile']) && $_FILES['contractFile']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = __DIR__ . '/../uploads/';
-            if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
-
-            $fileName = time() . "_" . basename($_FILES['contractFile']['name']);
-            $targetPath = $uploadDir . $fileName;
-
-            if (move_uploaded_file($_FILES['contractFile']['tmp_name'], $targetPath)) {
-                $data['filepath'] = 'uploads/' . $fileName; // save relative path
-            }
-        }
-        if (isset($data['filepath'])) {
-            $fields[] = "filepath";
-            $placeholders[] = "?";
-            $values[] = $data['filepath'];
         }
 
         // Add manager_id
@@ -105,28 +87,11 @@ class Contract
         $fields = [];
         $values = [];
 
-        foreach (['parties','typeOfContract','duration','contractValue','description','expiryDate','reviewByDate'] as $col) {
+        foreach (['parties','typeOfContract','duration','contractValue','description','expiryDate','reviewByDate','filepath'] as $col) {
             if (isset($data[$col])) {
                 $fields[] = "$col = ?";
                 $values[] = $data[$col];
             }
-        }
-
-        // Handle file upload
-        if (isset($_FILES['contractFile']) && $_FILES['contractFile']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = __DIR__ . '/../uploads/';
-            if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
-
-            $fileName = time() . "_" . basename($_FILES['contractFile']['name']);
-            $targetPath = $uploadDir . $fileName;
-
-            if (move_uploaded_file($_FILES['contractFile']['tmp_name'], $targetPath)) {
-                $data['filepath'] = 'uploads/' . $fileName;
-            }
-        }
-        if (isset($data['filepath'])) {
-            $fields[] = "filepath = ?";
-            $values[] = $data['filepath'];
         }
 
         if (empty($fields)) return false;
