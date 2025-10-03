@@ -555,3 +555,58 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   }
 });
+
+// ===============================
+// File Upload Validation
+// ===============================
+function validateFileSize(input, context) {
+  const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+  const allowedExtensions = ['pdf', 'doc', 'docx', 'txt', 'xlsx', 'xls'];
+  const errorDiv = document.getElementById(context + '-file-error');
+  
+  // Clear previous error messages
+  errorDiv.style.display = 'none';
+  errorDiv.textContent = '';
+  
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    const fileSize = file.size;
+    const fileName = file.name;
+    const fileExtension = fileName.split('.').pop().toLowerCase();
+    
+    // Check file size
+    if (fileSize > maxSize) {
+      const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
+      showFileError(errorDiv, `File size (${fileSizeMB} MB) exceeds the maximum limit of 5MB.`);
+      input.value = ''; // Clear the input
+      return false;
+    }
+    
+    // Check file extension
+    if (!allowedExtensions.includes(fileExtension)) {
+      showFileError(errorDiv, `File type "${fileExtension.toUpperCase()}" is not allowed. Allowed types: ${allowedExtensions.map(ext => ext.toUpperCase()).join(', ')}`);
+      input.value = ''; // Clear the input
+      return false;
+    }
+    
+    // File is valid
+    console.log(`File validation passed: ${fileName} (${(fileSize / (1024 * 1024)).toFixed(2)} MB)`);
+    return true;
+  }
+  
+  return true; // No file selected is OK
+}
+
+function showFileError(errorDiv, message) {
+  errorDiv.textContent = message;
+  errorDiv.style.display = 'block';
+}
+
+// Helper function to format file size
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}

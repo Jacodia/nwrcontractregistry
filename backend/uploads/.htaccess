@@ -1,0 +1,24 @@
+# Security configuration for uploads directory
+# Prevent execution of any scripts in this directory
+
+Options -ExecCGI -Indexes
+AllowOverride None
+
+# Remove all script handlers
+RemoveHandler .php .phtml .php3 .php4 .php5 .phps .pl .py .cgi
+RemoveType .php .phtml .php3 .php4 .php5 .phps .pl .py .cgi
+
+# Disable PHP execution
+php_flag engine off
+
+# Only allow specific file types to be served
+<FilesMatch "\.(pdf|doc|docx|txt|xlsx|xls)$">
+    Order allow,deny
+    Allow from all
+</FilesMatch>
+
+# Block all other file types
+<FilesMatch "^.*\.(?!pdf|doc|docx|txt|xlsx|xls).*$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>

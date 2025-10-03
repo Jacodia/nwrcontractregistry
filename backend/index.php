@@ -14,17 +14,55 @@ $controller = new ContractController($pdo);
 $userController = new UserController($pdo);
 $contractTypeController = new ContractTypeController($pdo);
 
+// Helper function to format bytes in human readable format
+function formatBytes($bytes, $precision = 2) {
+    $units = array('B', 'KB', 'MB', 'GB');
+    
+    for ($i = 0; $bytes >= 1024 && $i < count($units) - 1; $i++) {
+        $bytes /= 1024;
+    }
+    
+    return round($bytes, $precision) . ' ' . $units[$i];
+}
+
 // Function to handle file upload with new naming convention
 function handleFileUpload($file, $contractId, $partiesName = '')
 {
+    // Define upload limits
+    $maxFileSize = 5 * 1024 * 1024; // 5MB in bytes
+    $allowedExtensions = ['pdf', 'doc', 'docx', 'txt', 'xlsx', 'xls'];
+    
     $uploadDir = __DIR__ . '/uploads/';
     if (!is_dir($uploadDir)) {
         mkdir($uploadDir, 0777, true);
     }
 
-    // Get original file extension
-    $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-    
+    // Check for upload errors
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        switch ($file['error']) {
+            case UPLOAD_ERR_INI_SIZE:
+            case UPLOAD_ERR_FORM_SIZE:
+                throw new Exception("File is too large. Maximum size allowed is 5MB.");
+            case UPLOAD_ERR_PARTIAL:
+                throw new Exception("File upload was interrupted.");
+            case UPLOAD_ERR_NO_FILE:
+                throw new Exception("No file was uploaded.");
+            default:
+                throw new Exception("File upload failed with error code: " . $file['error']);
+        }
+    }
+
+    // Check file size
+    if ($file['size'] > $maxFileSize) {
+        throw new Exception("File size (" . formatBytes($file['size']) . ") exceeds the maximum limit of 5MB.");
+    }
+
+    // Check file extension
+    $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    if (!in_array($extension, $allowedExtensions)) {
+        throw new Exception("File type not allowed. Allowed types: " . implode(', ', $allowedExtensions));
+    }
+
     // Create new filename: contractID.timestamp.extension
     $timestamp = date('Ymd-His'); // Format: YYYYMMDD-HHMMSS
     $newFileName = $contractId . '.' . $timestamp . '.' . $extension;
@@ -35,7 +73,7 @@ function handleFileUpload($file, $contractId, $partiesName = '')
         return 'uploads/' . $newFileName; // relative path
     }
 
-    return false; // upload failed
+    throw new Exception("Failed to move uploaded file to destination.");
 }
 
 // Decide action from query string

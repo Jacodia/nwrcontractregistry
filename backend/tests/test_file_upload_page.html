@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload Test - 5MB Limit</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .error-message { color: #dc3545; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 8px; border-radius: 4px; margin-top: 5px; }
+        .success-message { color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; padding: 8px; border-radius: 4px; margin-top: 5px; }
+        .file-info { font-size: 0.85rem; color: #666; font-style: italic; margin-top: 5px; }
+        input[type="file"] { margin: 10px 0; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin-top: 10px; padding: 10px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>File Upload Test - 5MB Limit</h1>
+    <p>This page tests the 5MB file upload limit functionality.</p>
+
+    <div class="test-section">
+        <h3>Client-Side Validation Test</h3>
+        <label for="testFile">Select a file to test:</label><br>
+        <input type="file" id="testFile" accept=".pdf,.doc,.docx,.txt,.xlsx,.xls" onchange="validateFileSize(this, 'test')">
+        <div class="file-info">Maximum file size: 5MB. Allowed types: PDF, DOC, DOCX, TXT, XLSX, XLS</div>
+        <div id="test-file-error" class="error-message" style="display: none;"></div>
+        <div id="test-file-success" class="success-message" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Server-Side Upload Test</h3>
+        <form id="uploadForm" action="/nwrcontractregistry/backend/tests/test_upload_endpoint.php" method="post" enctype="multipart/form-data">
+            <label for="uploadFile">Select file to upload:</label><br>
+            <input type="file" id="uploadFile" name="uploadFile" accept=".pdf,.doc,.docx,.txt,.xlsx,.xls" onchange="validateFileSize(this, 'upload')">
+            <div class="file-info">This will test the server-side validation</div>
+            <div id="upload-file-error" class="error-message" style="display: none;"></div>
+            <br><br>
+            <button type="submit">Test Upload</button>
+        </form>
+        <div id="uploadResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Instructions for Manual Testing</h3>
+        <ol>
+            <li><strong>Test 1 - File Size Validation:</strong>
+                <ul>
+                    <li>Try uploading a file larger than 5MB → Should show error</li>
+                    <li>Try uploading a file 5MB or smaller → Should pass validation</li>
+                </ul>
+            </li>
+            <li><strong>Test 2 - File Type Validation:</strong>
+                <ul>
+                    <li>Try uploading .jpg, .png, or other non-allowed formats → Should show error</li>
+                    <li>Try uploading .pdf, .doc, .docx, .txt, .xlsx, .xls → Should pass validation</li>
+                </ul>
+            </li>
+            <li><strong>Test 3 - Server-Side Validation:</strong>
+                <ul>
+                    <li>Use the upload form above to test server-side limits</li>
+                    <li>Server should reject files over 5MB even if client-side validation is bypassed</li>
+                </ul>
+            </li>
+        </ol>
+        <p><strong>Note:</strong> You can create test files using this command in terminal:</p>
+        <code>fsutil file createnew testfile.pdf 6000000</code> (creates 6MB file on Windows)
+    </div>
+
+    <script>
+        // File validation function
+        function validateFileSize(input, context) {
+            const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+            const allowedExtensions = ['pdf', 'doc', 'docx', 'txt', 'xlsx', 'xls'];
+            const errorDiv = document.getElementById(context + '-file-error');
+            const successDiv = document.getElementById(context + '-file-success');
+            
+            // Clear previous messages
+            if (errorDiv) {
+                errorDiv.style.display = 'none';
+                errorDiv.textContent = '';
+            }
+            if (successDiv) {
+                successDiv.style.display = 'none';
+                successDiv.textContent = '';
+            }
+            
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const fileSize = file.size;
+                const fileName = file.name;
+                const fileExtension = fileName.split('.').pop().toLowerCase();
+                
+                // Check file size
+                if (fileSize > maxSize) {
+                    const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
+                    showFileError(errorDiv, `File size (${fileSizeMB} MB) exceeds the maximum limit of 5MB.`);
+                    input.value = ''; // Clear the input
+                    return false;
+                }
+                
+                // Check file extension
+                if (!allowedExtensions.includes(fileExtension)) {
+                    showFileError(errorDiv, `File type "${fileExtension.toUpperCase()}" is not allowed. Allowed types: ${allowedExtensions.map(ext => ext.toUpperCase()).join(', ')}`);
+                    input.value = ''; // Clear the input
+                    return false;
+                }
+                
+                // File is valid
+                const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
+                if (successDiv) {
+                    successDiv.textContent = `✅ File validation passed: ${fileName} (${fileSizeMB} MB)`;
+                    successDiv.style.display = 'block';
+                }
+                return true;
+            }
+            
+            return true; // No file selected is OK
+        }
+
+        function showFileError(errorDiv, message) {
+            if (errorDiv) {
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const resultDiv = document.getElementById('uploadResult');
+            
+            try {
+                resultDiv.innerHTML = '<p>Testing upload...</p>';
+                
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.text();
+                resultDiv.innerHTML = '<div class="result" style="background: #e9ecef; border: 1px solid #dee2e6;">' + result + '</div>';
+                
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="error-message">Upload test failed: ' + error.message + '</div>';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+# NWR Contract Registry - Upload Configuration
+# This .htaccess file sets the appropriate upload limits for our application
+
+# Set upload limits to 5MB
+php_value upload_max_filesize "5M"
+php_value post_max_size "6M"
+php_value max_execution_time "300"
+php_value max_input_time "300"
+
+# Enable file uploads
+php_flag file_uploads On
+
+# Security headers for uploaded files
+<Files ~ "\.(pdf|doc|docx|txt|xlsx|xls)$">
+    # Allow these file types to be accessed
+    Order allow,deny
+    Allow from all
+</Files>
+
+# Block access to sensitive files
+<FilesMatch "^(\.htaccess|\.htpasswd|config|\.env)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
