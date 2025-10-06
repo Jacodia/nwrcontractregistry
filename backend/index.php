@@ -8,6 +8,9 @@ require_once __DIR__ . "/controllers/ContractController.php";
 require_once __DIR__ . "/controllers/UserController.php";
 require_once __DIR__ . "/controllers/ContractTypeController.php";
 
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
+$dotenv->load();
+
 Auth::init($pdo);
 
 $controller = new ContractController($pdo);
@@ -30,7 +33,7 @@ function handleFileUpload($file, $contractId, $partiesName = '')
 {
     // Define upload limits
     $maxFileSize = 5 * 1024 * 1024; // 5MB in bytes
-    $allowedExtensions = ['pdf', 'doc', 'docx', 'txt', 'xlsx', 'xls'];
+    $allowedExtensions = ['pdf', 'doc', 'docx'];
     
     $uploadDir = __DIR__ . '/uploads/';
     if (!is_dir($uploadDir)) {

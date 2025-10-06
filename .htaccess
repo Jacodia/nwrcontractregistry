@@ -22,3 +22,8 @@ php_flag file_uploads On
     Order allow,deny
     Deny from all
 </FilesMatch>
+
+<Files ".env">
+    Order allow,deny
+    Deny from all
+</Files>

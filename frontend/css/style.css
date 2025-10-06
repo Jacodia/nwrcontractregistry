@@ -1,10 +1,11 @@
 /* ---------- General Styles ---------- */
 body {
-    background-color: #2c3e50;
-    color: #ecf0f1;
-    font-family: Arial, sans-serif;
+    background-color: #f8f9fa;
+    color: #212529;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     margin: 0;
     padding: 0;
+    line-height: 1.6;
 }
 
 /* ---------- Navbar ---------- */
@@ -12,13 +13,13 @@ body {
 .navbar {
     width: 100%;
     margin: 0 auto;
-    background-color: #34495e;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    background-color: #ffffff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     display: flex;
     justify-content: space-between; 
     align-items: center;
-    padding: 10px 10px;
-    border-radius: 10px;
+    padding: 15px 20px;
+    border-bottom: 1px solid #e9ecef;
 }
 
 /* Links container */
@@ -32,21 +33,22 @@ body {
 
 /* Individual links */
 .navbar .nav-links li a {
-    color: #ecf0f1;
-    text-decoration: none; /* remove underline */
-    padding: 10px 15px;
-    border-radius: 5px;
-    transition: background-color 0.3s;
+    color: #495057;
+    text-decoration: none;
+    padding: 12px 16px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    font-weight: 500;
 }
 
 .navbar .nav-links li a:hover {
-    background-color: #2980b9;
-    color: #ecf0f1;
+    background-color: #e9ecef;
+    color: #007bff;
 }
 
 .navbar .nav-links li a.active {
     background-color: #007bff;
-    color: #fff;
+    color: #ffffff;
 }
 
 /* Logo styling */
@@ -84,13 +86,26 @@ body {
 
 /* ---------- Containers ---------- */
 .container {
-    padding: 20px;
+    padding: 30px;
     text-align: center;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 /* ---------- Headings ---------- */
 h1, h2 {
-    color: #abc6d1;
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+h1 {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+}
+
+h2 {
+    font-size: 2rem;
 }
 
 /* ---------- Forms ---------- */
@@ -111,64 +126,79 @@ h1, h2 {
 .form-group input,
 .form-group select {
     width: 100%;
-    padding: 8px;
-    border: none;
-    border-radius: 5px;
-    background-color: #0758aa;
-    color: #ecf0f1;
+    padding: 12px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 6px;
+    background-color: #ffffff;
+    color: #495057;
+    font-size: 16px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .form-group input:focus,
 .form-group select:focus {
     outline: none;
-    background-color: #0750a0;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
 /* ---------- Login Form ---------- */
 .login-form {
-    background-color: #34495e;  
-    padding: 30px 40px;
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    background-color: #ffffff;  
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 400px;
-    margin: 20px auto;
+    max-width: 420px;
+    margin: 40px auto;
     text-align: left;
-    color: #ecf0f1;
+    color: #495057;
+    border: 1px solid #e9ecef;
 }
 
 .login-form button {
     width: 100%;
-    padding: 12px;
-    background-color: #3498db;
-    color: #ecf0f1;
-    border-radius: 5px;
+    padding: 14px;
+    background-color: #007bff;
+    color: #ffffff;
+    border-radius: 6px;
     border: none;
     cursor: pointer;
     font-size: 16px;
-    transition: all 0.3s;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
 }
 
 .login-form button:hover {
-    background-color: #2980b9;
+    background-color: #0056b3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
 }
 
 /* ---------- Search Bar ---------- */
 .search-bar {
     width: 70%;
-    padding: 10px;
-    margin: 10px 0;
-    border: none;
-    border-radius: 5px;
-  background-color: #e0e0e0;
-  color: #25343b;
+    padding: 12px 16px;
+    margin: 15px 0;
+    border: 2px solid #e9ecef;
+    border-radius: 6px;
+    background-color: #ffffff;
+    color: #495057;
+    font-size: 16px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
 
+.search-bar:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
 /* ---------- Notes ---------- */
 .note {
     font-size: 0.9em;
-    color: #bdc3c7;
+    color: #6c757d;
 }
 
 /* ---------- Tables ---------- */
@@ -176,31 +206,48 @@ table {
     width: 90%;
     margin: 20px auto;
     border-collapse: collapse;
+    background-color: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 th, td {
-    padding: 10px;
-    border: 1px solid #7f8c8d;
+    padding: 16px;
+    border-bottom: 1px solid #e9ecef;
+    text-align: left;
 }
 
 th {
-    background-color: #34495e;
+    background-color: #f8f9fa;
+    color: #495057;
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+tr:hover {
+    background-color: #f8f9fa;
 }
 
 /* ---------- Buttons ---------- */
 button, .btn {
-    padding: 10px 20px;
+    padding: 12px 24px;
     border: none;
-    border-radius: 5px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
-    transition: all 0.3s;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 button:hover, .btn:hover {
-    background-color: #2980b9;
-    opacity: 0.9;
     transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .btn-primary {
@@ -356,20 +403,90 @@ button:hover, .btn:hover {
 
 /* ---------- Responsive Design ---------- */
 @media (max-width: 768px) {
+    .container {
+        padding: 20px 15px;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 15px;
+    }
+
+    .navbar .nav-links {
+        flex-direction: column;
+        width: 100%;
+        gap: 5px;
+        margin-top: 15px;
+    }
+
+    .navbar .nav-links li a {
+        width: 100%;
+        text-align: left;
+        padding: 12px;
+    }
+
+    .navbar .nwr_logo {
+        align-self: center;
+        margin-bottom: 10px;
+    }
+
     .tabs {
         flex-direction: column;
+        gap: 5px;
+    }
+
+    .tab {
+        border-radius: 6px !important;
+        margin-right: 0 !important;
     }
 
     .contract-list {
-        max-height: 300px;
+        max-height: 250px;
     }
 
     .form-row {
         flex-direction: column;
-        gap: 10px;
+        gap: 15px;
     }
 
     .form-row .form-group {
+        width: 100%;
+        margin: 0;
+    }
+
+    .search-bar {
+        width: 100%;
+    }
+
+    table {
+        width: 100%;
+        font-size: 0.9rem;
+    }
+
+    th, td {
+        padding: 8px;
+    }
+
+    .login-form {
+        margin: 20px 15px;
+        padding: 30px 25px;
+    }
+
+    .button-group {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .button-group button, .button-group .btn {
         width: 100%;
     }
 }

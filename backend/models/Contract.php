@@ -10,6 +10,9 @@ use PHPMailer\PHPMailer\Exception;
 // Require Composer autoload for PHPMailer
 require_once __DIR__ . '/../../vendor/autoload.php';
 
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../..');
+$dotenv->load();
+
 class Contract
 {
     private $pdo;
@@ -24,7 +27,7 @@ class Contract
     // CRUD Methods
     // --------------------
 
-    // ✅ Only one getAllContracts() — includes manager_email and manager_name
+    // Only one getAllContracts() — includes manager_email and manager_name
     public function getAllContracts()
     {
         $sql = "SELECT c.*, u.email AS manager_email, u.username AS manager_name
@@ -58,7 +61,7 @@ class Contract
         $placeholders = [];
         $values = [];
 
-        foreach (['parties','typeOfContract','duration','contractValue','description','expiryDate','reviewByDate','filepath'] as $col) {
+        foreach (['parties', 'typeOfContract', 'duration', 'contractValue', 'description', 'expiryDate', 'reviewByDate', 'filepath'] as $col) {
             if (!empty($data[$col])) {
                 $fields[] = $col;
                 $placeholders[] = '?';
@@ -87,7 +90,7 @@ class Contract
         $fields = [];
         $values = [];
 
-        foreach (['parties','typeOfContract','duration','contractValue','description','expiryDate','reviewByDate','filepath'] as $col) {
+        foreach (['parties', 'typeOfContract', 'duration', 'contractValue', 'description', 'expiryDate', 'reviewByDate', 'filepath'] as $col) {
             if (isset($data[$col])) {
                 $fields[] = "$col = ?";
                 $values[] = $data[$col];
@@ -161,25 +164,21 @@ class Contract
         $mail = new PHPMailer(true);
 
         try {
-            // ===== Sender info =====
-            $senderEmail    = 'uraniathomas23@gmail.com'; // Gmail sender
-            $senderName     = 'Contract Registry';
-            $senderPassword = 'lkmkivxthjizqojc';   // Gmail App Password
 
             $mail->isSMTP();
-            $mail->Host       = 'smtp.gmail.com';
+            $mail->Host       = $_ENV['SMTP_HOST'];
             $mail->SMTPAuth   = true;
-            $mail->Username   = $senderEmail;
-            $mail->Password   = $senderPassword;
+            $mail->Username   = $_ENV['SMTP_FROM_EMAIL'];
+            $mail->Password   = $_ENV['SMTP_PASSWORD'];
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port       = 587;
+            $mail->Port       = $_ENV['SMTP_PORT'];
 
-            $mail->setFrom($senderEmail, $senderName);
+            $mail->setFrom($_ENV['SMTP_FROM_EMAIL'], $_ENV['SMTP_FROM_NAME']);
             $mail->addAddress($recipientEmail);
 
             $mail->isHTML(false);
             $mail->Subject = 'Contract Expiry Notification';
-            $mail->Body    = "Hello,\n\nThe contract of '{$contractType}' is set to expire on {$expiryDate}.\nPlease take necessary action before it expires.\n\nThank you.\nContract Registry System";
+            $mail->Body = "Hello,\n\nThe contract of '{$contractType}' is set to expire on {$expiryDate}.\nPlease take necessary action before it expires.\n\nThank you.\nContract Registry System";
 
             $mail->send();
             return true;

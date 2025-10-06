@@ -8,6 +8,9 @@ require_once '../vendor/phpmailer/phpmailer/src/Exception.php';
 require_once '../vendor/phpmailer/phpmailer/src/PHPMailer.php';
 require_once '../vendor/phpmailer/phpmailer/src/SMTP.php';
 
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
+$dotenv->load();
+
 date_default_timezone_set("Africa/Windhoek"); // adjust for timezone
 
 class ContractNotifier {
@@ -33,10 +36,10 @@ class ContractNotifier {
         }
 
         // Database connection
-        $host = 'localhost';
-        $db   = 'nwr_crdb';
-        $user = 'root';
-        $pass = '';
+        $host = $_ENV['DB_HOST'] ?? 'localhost';
+        $db   = $_ENV['DB_NAME'];
+        $user = $_ENV['DB_USER'];
+        $pass = $_ENV['DB_PASS'];
         $charset = 'utf8mb4';
 
         $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
@@ -146,18 +149,18 @@ class ContractNotifier {
         try {
             $this->logMessage("Attempting to send email to: $to");
             
-            // Gmail SMTP settings
+            // SMTP settings
             $mail->isSMTP();
-            $mail->Host       = 'smtp.gmail.com';
+            $mail->Host       = $_ENV['SMTP_HOST']; // SMTP server
             $mail->SMTPAuth   = true;
-            $mail->Username   = 'uraniathomas23@gmail.com'; // your Gmail
-            $mail->Password   = 'lkmkivxthjizqojc';   // Gmail App Password
+            $mail->Username   = $_ENV['SMTP_USERNAME']; // your Gmail
+            $mail->Password   = $_ENV['SMTP_PASSWORD'];   // Gmail App Password
             $mail->SMTPSecure = 'tls';
-            $mail->Port       = 587;
+            $mail->Port       = $_ENV['SMTP_PORT']; // TCP port to connect to
             $mail->Timeout    = 20; // Set timeout to 20 seconds
 
             // Recipients
-            $mail->setFrom('uraniathomas23@gmail.com', 'NWR Contracts');
+            $mail->setFrom($_ENV['SMTP_FROM_EMAIL'], $_ENV['SMTP_FROM_NAME']);
             $mail->addAddress($to);
 
             // Email content

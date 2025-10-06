@@ -561,7 +561,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 // ===============================
 function validateFileSize(input, context) {
   const maxSize = 5 * 1024 * 1024; // 5MB in bytes
-  const allowedExtensions = ['pdf', 'doc', 'docx', 'txt', 'xlsx', 'xls'];
+  const allowedExtensions = ['pdf', 'doc', 'docx'];
   const errorDiv = document.getElementById(context + '-file-error');
   
   // Clear previous error messages
