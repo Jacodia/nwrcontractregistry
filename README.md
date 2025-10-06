@@ -156,14 +156,46 @@ The system includes comprehensive testing capabilities:
 1. Clone the repository to your local machine.
 2. Configure email settings in `.env` file for notification system
 
+### Prerequisites
+- **Composer**: PHP dependency manager required for email functionality
+  - Download from [getcomposer.org](https://getcomposer.org/download/)
+  - **Windows**: Download and run `Composer-Setup.exe`
+  - **macOS/Linux**: Use the command line installer:
+    ```bash
+    php -r "copy('https://getcomposer.org/installer', 'composer-phar.php');"
+    php composer-phar.php
+    php -r "unlink('composer-phar.php');"
+    ```
+  - Verify installation: `composer --version`
+
 ### Option 1: Run in XAMPP
 1. Install [XAMPP][def]
 2. Copy `nwrcontractregistry/` folder into your `htdocs/` directory (e.g., `C:/xampp/htdocs/nwrcontractregistry`).
 3. Start Apache and MySQL services
-4. Install dependencies via Composer: `composer install`
+4. **Install PHP dependencies**:
+   ```bash
+   cd C:/xampp/htdocs/nwrcontractregistry
+   composer install
+   ```
+   This will install:
+   - PHPMailer (email functionality)
+   - vlucas/phpdotenv (environment configuration)
+   - Other required dependencies listed in `composer.json`
 5. Configure database connection in `backend/config/db.php`
 6. Set up email credentials in `.env` file
-7. Access the project in a browser:
+7. **Configure environment settings**:
+   ```php
+   // Add to your PHP files for environment-based error handling
+   if ($_ENV['APP_ENV'] === 'development') {
+       ini_set('display_errors', 1);
+       ini_set('display_startup_errors', 1);
+       error_reporting(E_ALL);
+   } else {
+       ini_set('display_errors', 0);
+       error_reporting(0);
+   }
+   ```
+8. Access the project in a browser:
 ``http://localhost/nwrcontractregistry/frontend/index.html
 http://localhost/nwrcontractregistry/backend/index.php``
 
@@ -182,6 +214,37 @@ The system includes comprehensive testing capabilities in the `backend/tests/` f
 - File upload/download validation
 - Database connectivity checks
 - User authentication testing
+
+## Troubleshooting
+
+### Composer Issues
+- **"composer not found"**: Ensure Composer is installed and added to your system PATH
+- **Permission errors**: Run command prompt as Administrator (Windows) or use `sudo` (macOS/Linux)
+- **SSL/TLS errors**: Update Composer with `composer self-update`
+- **Memory limit errors**: Increase PHP memory limit in `php.ini`: `memory_limit = 512M`
+
+### Email Issues
+- Verify SMTP credentials in `.env` file
+- Check Gmail app password configuration
+- Ensure ports 587 (TLS) or 465 (SSL) are not blocked by firewall
+- Review `backend/logs/reminder_log.txt` for detailed error messages
+
+### Environment Configuration
+- **Development Mode**: Set `APP_ENV=development` in `.env` for debugging
+- **Production Mode**: Set `APP_ENV=production` in `.env` for live deployment
+- **Error Handling**: The system automatically adjusts error reporting based on environment:
+  ```php
+  // Development: Shows all errors and warnings
+  // Production: Hides errors from end users
+  if ($_ENV['APP_ENV'] === 'development') {
+      ini_set('display_errors', 1);
+      ini_set('display_startup_errors', 1);
+      error_reporting(E_ALL);
+  } else {
+      ini_set('display_errors', 0);
+      error_reporting(0);
+  }
+  ```
 
 ## Contributing
 Feel free to submit issues or pull requests for improvements or bug fixes.
