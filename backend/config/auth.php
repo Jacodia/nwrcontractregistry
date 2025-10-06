@@ -11,7 +11,7 @@ if ($_ENV['APP_ENV'] === 'development') {
     ini_set('display_startup_errors', 1);
     error_reporting(E_ALL);
 } else {
-    ini_set('display_errors', 0);
+    ini_set('display_errors', 1);
     error_reporting(0);
 }
 
@@ -47,7 +47,7 @@ class Auth {
         if (!$user) return false;
         
         $roleHierarchy = [
-            'user' => 1,
+            'viewer' => 1,
             'manager' => 2,
             'admin' => 3
         ];
@@ -262,7 +262,7 @@ class Auth {
         $roleGroups = [
             'admin' => $_ENV['LDAP_ADMIN_GROUP'] ?? 'CN=NWR-Admins,OU=Groups,' . $base_dn,
             'manager' => $_ENV['LDAP_MANAGER_GROUP'] ?? 'CN=NWR-Managers,OU=Groups,' . $base_dn,
-            'user' => $_ENV['LDAP_USER_GROUP'] ?? 'CN=NWR-Users,OU=Groups,' . $base_dn
+            'viewer' => $_ENV['LDAP_USER_GROUP'] ?? 'CN=NWR-Users,OU=Groups,' . $base_dn
         ];
         
         // Search for user's group memberships
@@ -270,7 +270,7 @@ class Auth {
         $search_result = ldap_search($ldapconn, $base_dn, $search_filter, ['memberOf']);
         
         if (!$search_result) {
-            return 'user'; // Default role
+            return 'viewer'; // Default role
         }
         
         $entries = ldap_get_entries($ldapconn, $search_result);
@@ -301,17 +301,17 @@ class Auth {
                 }
             }
             
-            // Check for user role
+            // Check for viewer role
             foreach ($memberOf as $group) {
                 if (stripos($group, 'NWR-Users') !== false || 
-                    stripos($group, $roleGroups['user']) !== false) {
-                    return 'user';
+                    stripos($group, $roleGroups['viewer']) !== false) {
+                    return 'viewer';
                 }
             }
         }
         
         // Default role if no groups found or if groups don't match
-        return $_ENV['LDAP_DEFAULT_ROLE'] ?? 'user';
+        return $_ENV['LDAP_DEFAULT_ROLE'] ?? 'viewer';
     }
     
     // Create or update local user record for LDAP users
@@ -340,7 +340,7 @@ class Auth {
     }
     
     // Register new user
-    public static function register($username, $email, $password, $role = 'user') {
+    public static function register($username, $email, $password, $role = 'viewer') {
         try {
             // Check if user already exists
             $stmt = self::$pdo->prepare("SELECT userid FROM users WHERE email = ? OR username = ?");
