@@ -1,5 +1,5 @@
 <?php
-require_once 'ContractNotifier.php';
+require_once './ContractNotifier.php';
 
 echo "Testing contract notifications for contracts expiring in 5 days...\n";
 

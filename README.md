@@ -17,8 +17,15 @@ nwrcontractregistry
 │   ├── models                      # Data models (ORM / entities)  
 │   │   ├── Contract.php  
 │   │   └── User.php  
-│   ├── tests                       # Backend tests  
+│   ├── logs                        # Email notification logs  
+│   │   └── reminder_log.txt  
+│   ├── tests/                      # Backend testing suite  
 │   ├── uploads/                    # Stores uploaded contracts (PDFs, docs)  
+│   ├── ContractNotifier.php        # Email notification system  
+│   ├── send_30.php                 # 30-day reminder script  
+│   ├── send_60.php                 # 60-day reminder script  
+│   ├── send_90.php                 # 90-day reminder script  
+│   ├── cron_notify.php             # Automated notification scheduler  
 │   ├── auth_handler.php            # Authentication handler  
 │   ├── login.php                   # Login logic  
 │   ├── logout.php                  # Logout logic  
@@ -68,8 +75,14 @@ nwrcontractregistry
 | ├── controllers/UserController.php | User management actions |
 | ├── models/Contract.php            | Contract data model |
 | ├── models/User.php                | User data model |
-| ├── tests/                         | Unit/integration tests for backend |
+| ├── logs/reminder_log.txt          | Email notification activity logs |
+| ├── tests/                         | Comprehensive testing suite |
 | ├── uploads/                       | Stores uploaded contracts (PDFs, docs) |
+| ├── ContractNotifier.php           | Email notification system |
+| ├── send_30.php                    | 30-day contract reminder notifications |
+| ├── send_60.php                    | 60-day contract reminder notifications |
+| ├── send_90.php                    | 90-day contract reminder notifications |
+| ├── cron_notify.php                | Automated notification scheduler |
 | ├── auth_handler.php               | Handles authentication sessions |
 | ├── login.php                      | Login page (backend logic) |
 | ├── logout.php                     | Logout handler |
@@ -104,7 +117,10 @@ nwrcontractregistry
 ## Backend
 - **index.php**: Handles requests and routes to the appropriate controller.
 - **controllers/**: Contains request handlers for features like contract creation, update, and deletion.
-- **models/**: Defines PHP classes for database entities (e.g., Cotract, User)
+- **models/**: Defines PHP classes for database entities (e.g., Contract, User)
+- **ContractNotifier.php**: Email notification system for contract expiration reminders
+- **Email System**: Automated notifications for contracts expiring in 30, 60, and 90 days
+- **logs/**: Tracks email notification activity and system operations
 
 
 ## Frontend
@@ -113,23 +129,59 @@ nwrcontractregistry
 - **js/app.js**: JavaScript code for handling user interactions and dynamic content updates.
 - **pages/**: Extra views like dashboard and contract forms.
 
+## Email Notification System
+The system includes an automated email notification feature for contract expiration reminders:
+
+### Features
+- **30-Day Notifications**: Daily reminders for contracts expiring in 1-30 days
+- **60-Day Notifications**: Twice-weekly reminders for contracts expiring in 31-60 days  
+- **90-Day Notifications**: Weekly reminders for contracts expiring in 61-90 days
+
+### Configuration
+- **SMTP Server**: Gmail (smtp.gmail.com:587) with TLS encryption
+- **Authentication**: App password authentication for security
+- **Recipients**: Contract managers receive personalized notifications
+- **Logging**: All email activities tracked in `backend/logs/reminder_log.txt`
+
+### Email Testing
+The system includes comprehensive testing capabilities:
+- ✅ Basic email functionality tests
+- ✅ Contract notification system verification
+- ✅ Multi-category reminder testing (30/60/90 days)
+- ✅ Email delivery confirmation and logging
+
 
 
 ## Setup Instructions
 1. Clone the repository to your local machine.
+2. Configure email settings in `.env` file for notification system
 
 ### Option 1: Run in XAMPP
 1. Install [XAMPP][def]
-2. Copy `nwrcontractregistry/`folder into your `htdocs/` directory (e.g., `C:/xampp/htdocs/TrackingSys`).
-3. Start Apache (and MySQL (not neccessary for now))
-4. Access the project in a browser:
+2. Copy `nwrcontractregistry/` folder into your `htdocs/` directory (e.g., `C:/xampp/htdocs/nwrcontractregistry`).
+3. Start Apache and MySQL services
+4. Install dependencies via Composer: `composer install`
+5. Configure database connection in `backend/config/db.php`
+6. Set up email credentials in `.env` file
+7. Access the project in a browser:
 ``http://localhost/nwrcontractregistry/frontend/index.html
 http://localhost/nwrcontractregistry/backend/index.php``
 
 
 ## Usage
-- Frontend: Navigates through pages.
-- Backend: Can be tested separately at `http://localhost/nwrcontractregistry/backend/index.php`
+- **Frontend**: Navigate through pages for contract management and user administration
+- **Backend**: API endpoints accessible at `http://localhost/nwrcontractregistry/backend/index.php`
+- **Email Notifications**: Automated contract expiration reminders sent to managers
+- **File Uploads**: Support for PDF, DOC, and DOCX contract documents (5MB limit)
+- **User Roles**: Admin, Manager, and User access levels with appropriate permissions
+
+## Testing
+The system includes comprehensive testing capabilities in the `backend/tests/` folder:
+- Email functionality verification
+- Contract notification system testing
+- File upload/download validation
+- Database connectivity checks
+- User authentication testing
 
 ## Contributing
 Feel free to submit issues or pull requests for improvements or bug fixes.

@@ -3,7 +3,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 // Require Composer autoload
-require '../vendor/autoload.php';
+require '../../vendor/autoload.php';
 
 echo "Testing basic email functionality...\n";
 

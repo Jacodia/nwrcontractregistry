@@ -1,11 +1,12 @@
 <?php
-require_once 'ContractNotifier.php';
+require_once './ContractNotifier.php';
+
+echo "Testing 30-day contract notifications...\n";
 
 $notifier = new ContractNotifier();
-$notifier->checkAndSend(5, 'daily'); // Test with 5 days instead of 30
+$notifier->checkAndSend(30, 'daily'); // Test 30-day notifications
 
 echo "\n\n";
-
-echo "5 days email sent (testing modified 30-day script).";
+echo "30-day email notification test completed.";
 
 ?>
