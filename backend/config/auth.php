@@ -128,6 +128,8 @@ class Auth {
             $ldap_port = $_ENV['LDAP_PORT'];
             $ldap_base_dn = $_ENV['LDAP_BASE_DN'];
             $ldap_domain = $_ENV['LDAP_DOMAIN'];
+            $ldap_bind_user = $_ENV['LDAP_BIND_USER'] ?? null;
+            $ldap_bind_password = $_ENV['LDAP_BIND_PASSWORD'] ?? null;
             $use_tls = $_ENV['LDAP_USE_TLS'] === 'true';
             
             // Connect to LDAP server
@@ -139,6 +141,7 @@ class Auth {
             // Set LDAP options
             ldap_set_option($ldapconn, LDAP_OPT_PROTOCOL_VERSION, 3);
             ldap_set_option($ldapconn, LDAP_OPT_REFERRALS, 0);
+            ldap_set_option($ldapconn, LDAP_OPT_NETWORK_TIMEOUT, 10);
             
             if ($use_tls) {
                 if (!ldap_start_tls($ldapconn)) {
@@ -146,84 +149,169 @@ class Auth {
                 }
             }
             
-            // Try to bind with user credentials
-            $userdn = $email; // or construct: "cn=" . explode('@', $email)[0] . "," . $ldap_base_dn
-            if (@ldap_bind($ldapconn, $userdn, $password)) {
-                // Successful authentication
-                $username = explode('@', $email)[0];
+            // If service account is configured, bind with it first to search for user
+            if ($ldap_bind_user && $ldap_bind_password) {
+                if (!ldap_bind($ldapconn, $ldap_bind_user, $ldap_bind_password)) {
+                    return ['success' => false, 'error' => 'Service account bind failed'];
+                }
                 
-                // Get user details from LDAP (optional)
-                $search_filter = "(&(objectClass=user)(mail=$email))";
-                $search_result = ldap_search($ldapconn, $ldap_base_dn, $search_filter);
-                $entries = ldap_get_entries($ldapconn, $search_result);
-                
-                // Determine role based on group membership (simplified)
-                $role = self::getLDAPUserRole($ldapconn, $ldap_base_dn, $email);
-                
-                // Create or update user in local database for session management
-                $userId = self::createOrUpdateLocalUser($username, $email, $role);
-                
-                session_regenerate_id(true);
-                $_SESSION['user_id'] = $userId;
-                $_SESSION['user_email'] = $email;
-                $_SESSION['user_role'] = $role;
-                $_SESSION['username'] = $username;
-                
-                ldap_close($ldapconn);
-                
-                return [
-                    'success' => true,
-                    'method' => 'ldap',
-                    'user' => [
-                        'id' => $userId,
-                        'username' => $username,
-                        'email' => $email,
-                        'role' => $role
-                    ]
-                ];
+                // Search for user DN
+                $userDN = self::findUserDN($ldapconn, $ldap_base_dn, $email);
+                if (!$userDN) {
+                    ldap_close($ldapconn);
+                    return ['success' => false, 'error' => 'User not found'];
+                }
             } else {
+                // Direct bind attempt (simpler setup)
+                $userDN = self::normalizeUsername($email, $ldap_domain);
+            }
+            
+            // Authenticate user with their credentials
+            if (!@ldap_bind($ldapconn, $userDN, $password)) {
                 ldap_close($ldapconn);
                 return ['success' => false, 'error' => 'Invalid LDAP credentials'];
             }
+            
+            // Get user details and role
+            $userInfo = self::getUserLDAPInfo($ldapconn, $ldap_base_dn, $email);
+            $role = self::getLDAPUserRole($ldapconn, $ldap_base_dn, $email);
+            $username = $userInfo['username'] ?? explode('@', $email)[0];
+            
+            // Create or update user in local database for session management
+            $userId = self::createOrUpdateLocalUser($username, $email, $role);
+            
+            session_regenerate_id(true);
+            $_SESSION['user_id'] = $userId;
+            $_SESSION['user_email'] = $email;
+            $_SESSION['user_role'] = $role;
+            $_SESSION['username'] = $username;
+            
+            ldap_close($ldapconn);
+            
+            return [
+                'success' => true,
+                'method' => 'ldap',
+                'user' => [
+                    'id' => $userId,
+                    'username' => $username,
+                    'email' => $email,
+                    'role' => $role
+                ]
+            ];
+            
         } catch (Exception $e) {
             error_log('LDAP Authentication Error: ' . $e->getMessage());
             return ['success' => false, 'error' => 'LDAP authentication failed'];
         }
     }
     
+    // Helper method to normalize username for LDAP
+    private static function normalizeUsername($username, $domain) {
+        // Handle various input formats
+        if (strpos($username, '@') === false) {
+            return $username . '@' . $domain;
+        }
+        return $username;
+    }
+    
+    // Helper method to find user DN in LDAP
+    private static function findUserDN($ldapconn, $base_dn, $email) {
+        $search_filter = "(&(objectClass=user)(|(mail=$email)(userPrincipalName=$email)(sAMAccountName=" . explode('@', $email)[0] . ")))";
+        $search_result = ldap_search($ldapconn, $base_dn, $search_filter);
+        
+        if (!$search_result) {
+            return false;
+        }
+        
+        $entries = ldap_get_entries($ldapconn, $search_result);
+        
+        if ($entries['count'] > 0) {
+            return $entries[0]['dn'];
+        }
+        
+        return false;
+    }
+    
+    // Helper method to get user info from LDAP
+    private static function getUserLDAPInfo($ldapconn, $base_dn, $email) {
+        $search_filter = "(&(objectClass=user)(|(mail=$email)(userPrincipalName=$email)))";
+        $search_result = ldap_search($ldapconn, $base_dn, $search_filter, [
+            'sAMAccountName', 'mail', 'displayName', 'department'
+        ]);
+        
+        if (!$search_result) {
+            return ['username' => explode('@', $email)[0]];
+        }
+        
+        $entries = ldap_get_entries($ldapconn, $search_result);
+        
+        if ($entries['count'] > 0) {
+            return [
+                'username' => $entries[0]['samaccountname'][0] ?? explode('@', $email)[0],
+                'displayName' => $entries[0]['displayname'][0] ?? '',
+                'department' => $entries[0]['department'][0] ?? ''
+            ];
+        }
+        
+        return ['username' => explode('@', $email)[0]];
+    }
+    
     // Get user role from LDAP group membership
     private static function getLDAPUserRole($ldapconn, $base_dn, $email) {
-        // Define group mappings
+        // Define group mappings - can be configured via environment variables
         $roleGroups = [
-            'admin' => 'CN=NWR-Admins,OU=Groups,' . $base_dn,
-            'manager' => 'CN=NWR-Managers,OU=Groups,' . $base_dn,
-            'user' => 'CN=NWR-Users,OU=Groups,' . $base_dn
+            'admin' => $_ENV['LDAP_ADMIN_GROUP'] ?? 'CN=NWR-Admins,OU=Groups,' . $base_dn,
+            'manager' => $_ENV['LDAP_MANAGER_GROUP'] ?? 'CN=NWR-Managers,OU=Groups,' . $base_dn,
+            'user' => $_ENV['LDAP_USER_GROUP'] ?? 'CN=NWR-Users,OU=Groups,' . $base_dn
         ];
         
         // Search for user's group memberships
-        $search_filter = "(&(objectClass=user)(mail=$email))";
+        $search_filter = "(&(objectClass=user)(|(mail=$email)(userPrincipalName=$email)))";
         $search_result = ldap_search($ldapconn, $base_dn, $search_filter, ['memberOf']);
+        
+        if (!$search_result) {
+            return 'user'; // Default role
+        }
+        
         $entries = ldap_get_entries($ldapconn, $search_result);
         
         if ($entries['count'] > 0 && isset($entries[0]['memberof'])) {
-            $memberOf = $entries[0]['memberof'];
+            $memberOf = [];
+            
+            // Handle both single and multiple group memberships
+            if (is_array($entries[0]['memberof'])) {
+                for ($i = 0; $i < $entries[0]['memberof']['count']; $i++) {
+                    $memberOf[] = $entries[0]['memberof'][$i];
+                }
+            }
             
             // Check for admin role first (highest priority)
-            if (in_array($roleGroups['admin'], $memberOf)) {
-                return 'admin';
+            foreach ($memberOf as $group) {
+                if (stripos($group, 'NWR-Admins') !== false || 
+                    stripos($group, $roleGroups['admin']) !== false) {
+                    return 'admin';
+                }
             }
+            
             // Check for manager role
-            if (in_array($roleGroups['manager'], $memberOf)) {
-                return 'manager';
+            foreach ($memberOf as $group) {
+                if (stripos($group, 'NWR-Managers') !== false || 
+                    stripos($group, $roleGroups['manager']) !== false) {
+                    return 'manager';
+                }
             }
-            // Default to user role
-            if (in_array($roleGroups['user'], $memberOf)) {
-                return 'user';
+            
+            // Check for user role
+            foreach ($memberOf as $group) {
+                if (stripos($group, 'NWR-Users') !== false || 
+                    stripos($group, $roleGroups['user']) !== false) {
+                    return 'user';
+                }
             }
         }
         
-        // Default role if no groups found
-        return 'user';
+        // Default role if no groups found or if groups don't match
+        return $_ENV['LDAP_DEFAULT_ROLE'] ?? 'user';
     }
     
     // Create or update local user record for LDAP users
