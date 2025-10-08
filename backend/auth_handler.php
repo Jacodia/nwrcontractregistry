@@ -52,7 +52,7 @@ try {
                 exit;
             }
             
-            $result = Auth::register($username, $email, $password, 'user'); // Default to user role
+            $result = Auth::register($username, $email, $password, 'viewer'); // Default to viewer role
             echo json_encode($result);
             break;
             
