@@ -12,7 +12,7 @@ if ($_ENV['APP_ENV'] === 'development') {
     error_reporting(E_ALL);
 } else {
     ini_set('display_errors', 1);
-    error_reporting(0);
+    error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
 }
 
 // Role-based authentication 
@@ -124,81 +124,98 @@ class Auth {
     // LDAP authentication method
     private static function authenticateLDAP($email, $password) {
         try {
-            $ldap_host = $_ENV['LDAP_HOST'];
-            $ldap_port = $_ENV['LDAP_PORT'];
-            $ldap_base_dn = $_ENV['LDAP_BASE_DN'];
-            $ldap_domain = $_ENV['LDAP_DOMAIN'];
-            $ldap_bind_user = $_ENV['LDAP_BIND_USER'] ?? null;
-            $ldap_bind_password = $_ENV['LDAP_BIND_PASSWORD'] ?? null;
-            $use_tls = $_ENV['LDAP_USE_TLS'] === 'true';
-            
-            // Connect to LDAP server
-            $ldapconn = ldap_connect($ldap_host, $ldap_port);
-            if (!$ldapconn) {
+            $ldap = ldap_connect($_ENV['LDAP_HOST'], $_ENV['LDAP_PORT']);
+            if (!$ldap) {
                 return ['success' => false, 'error' => 'Could not connect to LDAP server'];
             }
-            
-            // Set LDAP options
-            ldap_set_option($ldapconn, LDAP_OPT_PROTOCOL_VERSION, 3);
-            ldap_set_option($ldapconn, LDAP_OPT_REFERRALS, 0);
-            ldap_set_option($ldapconn, LDAP_OPT_NETWORK_TIMEOUT, 10);
-            
-            if ($use_tls) {
-                if (!ldap_start_tls($ldapconn)) {
-                    return ['success' => false, 'error' => 'Could not start TLS'];
+
+            ldap_set_option($ldap, LDAP_OPT_PROTOCOL_VERSION, 3);
+            ldap_set_option($ldap, LDAP_OPT_REFERRALS, 0);
+
+            if ($_ENV['LDAP_USE_TLS'] === 'true') {
+                ldap_start_tls($ldap);
+            }
+
+            // 1. Bind with service account
+            $bind = @ldap_bind($ldap, $_ENV['LDAP_BIND_USER'], $_ENV['LDAP_BIND_PASSWORD']);
+            if (!$bind) {
+                ldap_close($ldap);
+                return ['success' => false, 'error' => 'LDAP service account bind failed'];
+            }
+
+            // 2. Search for user
+            $filter = "(userPrincipalName=$email)";
+            $search = ldap_search($ldap, $_ENV['LDAP_BASE_DN'], $filter, ['dn', 'memberof', 'sAMAccountName', 'displayName', 'mail']);
+            $entries = ldap_get_entries($ldap, $search);
+
+            if ($entries['count'] == 0) {
+                ldap_close($ldap);
+                return ['success' => false, 'error' => 'User not found'];
+            }
+
+            $userDn = $entries[0]['dn'];
+            $groups = isset($entries[0]['memberof']) ? $entries[0]['memberof'] : [];
+            $isContractUser = false;
+
+            // Check group membership
+            if (is_array($groups)) {
+                for ($i = 0; $i < $groups['count']; $i++) {
+                    if (stripos($groups[$i], $_ENV['LDAP_GROUP']) !== false) {
+                        $isContractUser = true;
+                        break;
+                    }
                 }
             }
-            
-            // If service account is configured, bind with it first to search for user
-            if ($ldap_bind_user && $ldap_bind_password) {
-                if (!ldap_bind($ldapconn, $ldap_bind_user, $ldap_bind_password)) {
-                    return ['success' => false, 'error' => 'Service account bind failed'];
+
+            if (!$isContractUser) {
+                ldap_close($ldap);
+                return ['success' => false, 'error' => 'Access denied – not a Contracts_User member.'];
+            }
+
+            // 3. Verify user password
+            if (@ldap_bind($ldap, $userDn, $password)) {
+                // Get user info
+                $username = $entries[0]['samaccountname'][0] ?? explode('@', $email)[0];
+                $displayName = $entries[0]['displayname'][0] ?? '';
+                $role = 'viewer'; // Default, or you can map based on group membership
+
+                // Optionally, map role based on group membership
+                if (is_array($groups)) {
+                    for ($i = 0; $i < $groups['count']; $i++) {
+                        if (stripos($groups[$i], 'NWR-Admins') !== false) {
+                            $role = 'admin';
+                            break;
+                        } elseif (stripos($groups[$i], 'NWR-Managers') !== false) {
+                            $role = 'manager';
+                        }
+                    }
                 }
-                
-                // Search for user DN
-                $userDN = self::findUserDN($ldapconn, $ldap_base_dn, $email);
-                if (!$userDN) {
-                    ldap_close($ldapconn);
-                    return ['success' => false, 'error' => 'User not found'];
-                }
+
+                // Create or update local user
+                $userId = self::createOrUpdateLocalUser($username, $email, $role);
+
+                session_regenerate_id(true);
+                $_SESSION['user_id'] = $userId;
+                $_SESSION['user_email'] = $email;
+                $_SESSION['user_role'] = $role;
+                $_SESSION['username'] = $username;
+
+                ldap_close($ldap);
+
+                return [
+                    'success' => true,
+                    'method' => 'ldap',
+                    'user' => [
+                        'id' => $userId,
+                        'username' => $username,
+                        'email' => $email,
+                        'role' => $role
+                    ]
+                ];
             } else {
-                // Direct bind attempt (simpler setup)
-                $userDN = self::normalizeUsername($email, $ldap_domain);
+                ldap_close($ldap);
+                return ['success' => false, 'error' => 'Invalid password'];
             }
-            
-            // Authenticate user with their credentials
-            if (!@ldap_bind($ldapconn, $userDN, $password)) {
-                ldap_close($ldapconn);
-                return ['success' => false, 'error' => 'Invalid LDAP credentials'];
-            }
-            
-            // Get user details and role
-            $userInfo = self::getUserLDAPInfo($ldapconn, $ldap_base_dn, $email);
-            $role = self::getLDAPUserRole($ldapconn, $ldap_base_dn, $email);
-            $username = $userInfo['username'] ?? explode('@', $email)[0];
-            
-            // Create or update user in local database for session management
-            $userId = self::createOrUpdateLocalUser($username, $email, $role);
-            
-            session_regenerate_id(true);
-            $_SESSION['user_id'] = $userId;
-            $_SESSION['user_email'] = $email;
-            $_SESSION['user_role'] = $role;
-            $_SESSION['username'] = $username;
-            
-            ldap_close($ldapconn);
-            
-            return [
-                'success' => true,
-                'method' => 'ldap',
-                'user' => [
-                    'id' => $userId,
-                    'username' => $username,
-                    'email' => $email,
-                    'role' => $role
-                ]
-            ];
-            
         } catch (Exception $e) {
             error_log('LDAP Authentication Error: ' . $e->getMessage());
             return ['success' => false, 'error' => 'LDAP authentication failed'];
