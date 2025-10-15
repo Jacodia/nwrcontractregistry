@@ -166,14 +166,17 @@ class Contract
         try {
 
             $mail->isSMTP();
-            $mail->Host       = $_ENV['SMTP_HOST'];
+            $mail->Host       = $_ENV['SMTP_HOST'] ?? getenv('SMTP_HOST') ?? 'smtp.gmail.com';
             $mail->SMTPAuth   = true;
-            $mail->Username   = $_ENV['SMTP_FROM_EMAIL'];
-            $mail->Password   = $_ENV['SMTP_PASSWORD'];
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port       = $_ENV['SMTP_PORT'];
+            $mail->Username   = $_ENV['SMTP_USER'] ?? $_ENV['SMTP_FROM_EMAIL'] ?? getenv('SMTP_USER') ?? getenv('SMTP_FROM_EMAIL') ?? '';
+            $mail->Password   = $_ENV['SMTP_PASSWORD'] ?? getenv('SMTP_PASSWORD') ?? '';
+            $mail->SMTPSecure = $_ENV['SMTP_SECURE'] ?? getenv('SMTP_SECURE') ?? PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port       = intval($_ENV['SMTP_PORT'] ?? getenv('SMTP_PORT') ?? 587);
 
-            $mail->setFrom($_ENV['SMTP_FROM_EMAIL'], $_ENV['SMTP_FROM_NAME']);
+            $fromEmail = $_ENV['SMTP_FROM_EMAIL'] ?? getenv('SMTP_FROM_EMAIL') ?? $mail->Username;
+            $fromName  = $_ENV['SMTP_FROM_NAME'] ?? getenv('SMTP_FROM_NAME') ?? 'Contract Registry System';
+
+            $mail->setFrom($fromEmail, $fromName);
             $mail->addAddress($recipientEmail);
 
             $mail->isHTML(false);
@@ -183,7 +186,8 @@ class Contract
             $mail->send();
             return true;
         } catch (Exception $e) {
-            error_log("Mailer Error for {$recipientEmail}: {$mail->ErrorInfo}");
+            // Log error without exposing sensitive details
+            error_log("Mailer Error for {$recipientEmail}: " . $e->getMessage());
             return false;
         }
     }

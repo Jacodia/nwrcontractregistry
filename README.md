@@ -183,6 +183,24 @@ The system includes comprehensive testing capabilities:
    - Other required dependencies listed in `composer.json`
 5. Configure database connection in `backend/config/db.php`
 6. Set up email credentials in `.env` file
+
+### .env variables
+Create a `.env` file in the project root with at least the following values:
+
+- DB_HOST=127.0.0.1
+- DB_USER=dbuser
+- DB_PASS=secret
+- DB_NAME=contractregistry
+- APP_ENV=development
+
+- SMTP_HOST=smtp.gmail.com
+- SMTP_PORT=587
+- SMTP_USER=your.email@example.com
+- SMTP_PASS=your_app_password
+- SMTP_FROM_EMAIL=your.email@example.com
+- SMTP_FROM_NAME="Contract Registry System"
+
+Note: Never commit your `.env` file to version control. Use environment variables in production and ensure proper file permissions for any files that contain secrets.
 7. **Configure environment settings**:
    ```php
    // Add to your PHP files for environment-based error handling

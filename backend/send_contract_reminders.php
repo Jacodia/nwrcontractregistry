@@ -68,17 +68,23 @@ foreach ($contracts as $contract) {
         $mail = new PHPMailer(true); // true enables exceptions
 
         try {
-            // SMTP settings
+            // SMTP settings - read from environment variables to avoid hardcoding secrets
             $mail->isSMTP();
-            $mail->Host       = 'smtp.gmail.com'; // Gmail SMTP server
+            $mail->Host       = $_ENV['SMTP_HOST'] ?? getenv('SMTP_HOST') ?? 'smtp.gmail.com';
             $mail->SMTPAuth   = true;
-            $mail->Username   = 'uraniathomas23@gmail.com'; // Your Gmail
-            $mail->Password   = 'lkmkivxthjizqojc'; // The 16-char app password from Step 2
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // TLS
-            $mail->Port       = 587; // Gmail TLS port
+            $mail->Username   = $_ENV['SMTP_USER'] ?? getenv('SMTP_USER') ?? '';
+            $mail->Password   = $_ENV['SMTP_PASS'] ?? getenv('SMTP_PASS') ?? '';
+            $mail->SMTPSecure = $_ENV['SMTP_SECURE'] ?? getenv('SMTP_SECURE') ?? PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port       = intval($_ENV['SMTP_PORT'] ?? getenv('SMTP_PORT') ?? 587);
+
+            // Validate SMTP credentials presence; if missing, log and skip sending
+            if (empty($mail->Username) || empty($mail->Password)) {
+                logMessage("SMTP credentials not configured; skipping email to {$contract['email']}");
+                continue;
+            }
 
             // Recipients
-            $mail->setFrom('uraniathomas23@gmail.com', 'Contract Registry System'); // Sender
+            $mail->setFrom($mail->Username, 'Contract Registry System'); // Sender
             $mail->addAddress($contract['email'], $contract['username']); // Manager's email
 
             // Content
