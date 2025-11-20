@@ -4,7 +4,7 @@ let currentUser = null;
 async function checkAuth() {
   try {
     const response = await fetch(
-      "/nwrcontractregistry/backend/auth_handler.php?action=check"
+      "/nwrcontractregistry/backend_mysql/auth_check.php"
     );
     const result = await response.json();
 
@@ -58,7 +58,7 @@ function updateUI() {
 async function logout() {
   try {
     const response = await fetch(
-      "/nwrcontractregistry/backend/auth_handler.php?action=logout",
+      "/nwrcontractregistry/backend_mysql/logout.php",
       {
         method: "POST",
       }
@@ -76,7 +76,7 @@ async function logout() {
 async function loadContracts() {
   console.log("Loading contracts...");
 
-  const backendUrl = "/nwrcontractregistry/backend/index.php?action=list";
+  const backendUrl = "/nwrcontractregistry/backend_mysql/get_contracts.php";
 
   try {
     const response = await fetch(backendUrl);
@@ -121,7 +121,7 @@ async function loadContracts() {
         // Handle file links
         let fileCell = "N/A";
         if (contract.filepath) {
-          const fileUrl = `/nwrcontractregistry/backend/${contract.filepath}`;
+          const fileUrl = `/nwrcontractregistry/backend_mysql/${contract.filepath}`;
           fileCell = `
         <a href="${fileUrl}" target="_blank">View</a> |
         <a href="${fileUrl}" download>Download</a>

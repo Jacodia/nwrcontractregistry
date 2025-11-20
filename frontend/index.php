@@ -224,7 +224,7 @@
         
         async function checkLoginStatus() {
             try {
-                const response = await fetch('/nwrcontractregistry/backend/auth_handler.php?action=check');
+            const response = await fetch('/nwrcontractregistry/backend_mysql/auth_check.php');
                 const result = await response.json();
                 
                 if (result.loggedIn) {
@@ -306,7 +306,7 @@
             setLoading(true);
             
             try {
-                const response = await fetch('/nwrcontractregistry/backend/auth_handler.php?action=login', {
+                const response = await fetch('/nwrcontractregistry/backend_mysql/login.php', {
                     method: 'POST',
                     body: formData
                 });
@@ -348,7 +348,8 @@
             setLoading(true);
             
             try {
-                const response = await fetch('/nwrcontractregistry/backend/auth_handler.php?action=register', {
+                const response = await fetch('/nwrcontractregistry/backend_mysql/login.php', {
+                    // backend_mysql has no register endpoint; use login endpoint for testing purposes
                     method: 'POST',
                     body: formData
                 });

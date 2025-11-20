@@ -6,8 +6,8 @@ let selectedContract = null;
 let contractToDelete = null;
 let currentUser = null;
 
-// API base URL (backend entrypoint)
-const API_BASE = "/nwrcontractregistry/backend/index.php";
+// API base URL (backend_mysql entrypoint)
+const API_BASE = "/nwrcontractregistry/backend_mysql";
 
 // ===============================
 // Authentication & Authorization
@@ -15,7 +15,7 @@ const API_BASE = "/nwrcontractregistry/backend/index.php";
 async function checkAuth() {
   try {
     const response = await fetch(
-      "/nwrcontractregistry/backend/auth_handler.php?action=check"
+      "/nwrcontractregistry/backend_mysql/auth_check.php"
     );
     const result = await response.json();
 
@@ -78,7 +78,7 @@ function updateUserInfo() {
 // ===============================
 async function logout() {
   try {
-    await fetch("/nwrcontractregistry/backend/auth_handler.php?action=logout", {
+    await fetch("/nwrcontractregistry/backend_mysql/logout.php", {
       method: "POST",
     });
     window.location.href = "../index.php";
@@ -123,7 +123,7 @@ function initializeTabs() {
 // ===============================
 async function loadContracts() {
   try {
-    const response = await fetch(`${API_BASE}?action=list`);
+  const response = await fetch(`${API_BASE}/get_contracts.php`);
     if (!response.ok) {
       if (response.status === 401) {
         window.location.href = "../index.php";
@@ -132,7 +132,8 @@ async function loadContracts() {
       throw new Error("Failed to fetch contracts");
     }
 
-    contracts = await response.json();
+  // backend_mysql/get_contracts.php returns an array
+  contracts = await response.json();
     console.log("Loaded contracts:", contracts.length);
 
     updateContractLists();
@@ -217,7 +218,7 @@ async function handleCreateContract(e) {
   const formData = new FormData(e.target);
 
   try {
-    const response = await fetch(`${API_BASE}?action=create`, {
+    const response = await fetch(`${API_BASE}/add_contract.php`, {
       method: "POST",
       body: formData,
     });
@@ -299,7 +300,7 @@ function populateEditForm(contract) {
   const downloadLink = document.getElementById("download-contract-file");
 
   if (contract.filepath && viewContainer && viewLink && downloadLink) {
-    const fileUrl = `/nwrcontractregistry/backend/${contract.filepath}`;
+  const fileUrl = `/nwrcontractregistry/backend_mysql/${contract.filepath}`;
     viewLink.href = fileUrl;
     downloadLink.href = fileUrl;
     viewContainer.style.display = "block";
@@ -488,7 +489,7 @@ function formatCurrency(value) {
 // Contract Types Handling
 // ===============================
 async function loadContractTypes() {
-  const res = await fetch('/nwrcontractregistry/backend/index.php?action=list_types');
+  const res = await fetch('/nwrcontractregistry/backend_mysql/list_types.php');
   const types = await res.json();
 
   const selects = [document.getElementById('typeOfContract'), document.getElementById('edit-typeOfContract')];
@@ -524,7 +525,7 @@ async function saveType() {
     return;
   }
 
-  const res = await fetch('/nwrcontractregistry/backend/index.php?action=add_type', {
+  const res = await fetch('/nwrcontractregistry/backend_mysql/add_type.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, userId })

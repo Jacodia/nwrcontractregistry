@@ -71,7 +71,7 @@
         // Check authentication and authorization
         async function checkAuth() {
             try {
-                const response = await fetch('/nwrcontractregistry/backend/auth_handler.php?action=check');
+                const response = await fetch('/nwrcontractregistry/backend_mysql/auth_check.php');
                 const result = await response.json();
 
                 if (!result.loggedIn) {
@@ -118,7 +118,7 @@
 
         async function logout() {
             try {
-                await fetch('/nwrcontractregistry/backend/auth_handler.php?action=logout', {
+                await fetch('/nwrcontractregistry/backend_mysql/logout.php', {
                     method: 'POST'
                 });
                 window.location.href = '../index.php';

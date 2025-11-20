@@ -1,7 +1,7 @@
 async function loadContracts() {
   console.log("Loading contracts...");
 
-  const backendUrl = "/nwrcontractregistry/backend/index.php?action=list";
+  const backendUrl = "/nwrcontractregistry/backend_mysql/get_contracts.php";
 
   try {
     const response = await fetch(backendUrl);
